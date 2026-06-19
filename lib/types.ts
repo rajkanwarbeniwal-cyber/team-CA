@@ -123,6 +123,23 @@ export interface ExamQuestion {
   sort_order: number
 }
 
+// A row from the get_attempt_review RPC (full review payload, owner only)
+export interface AttemptReviewRow {
+  question_id: string
+  question_text: string
+  option_a: string
+  option_b: string
+  option_c: string
+  option_d: string
+  correct_option: OptionKey
+  explanation: string | null
+  selected_option: OptionKey | null
+  is_correct: boolean
+  is_bookmarked: boolean
+  is_skipped: boolean
+  sort_order: number
+}
+
 export const OPTION_KEYS: OptionKey[] = ["A", "B", "C", "D"]
 
 export function optionText(q: { option_a: string; option_b: string; option_c: string; option_d: string }, key: OptionKey) {
