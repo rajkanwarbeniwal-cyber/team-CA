@@ -41,6 +41,7 @@ export interface MockTest {
   per_question_seconds: number
   difficulty: Difficulty
   is_published: boolean
+  question_count: number
   created_at: string
 }
 

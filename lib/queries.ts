@@ -46,7 +46,7 @@ export function useCategoriesWithTests() {
 
       const { data: tests, error: testErr } = await supabase
         .from("mock_tests")
-        .select("*, questions(count)")
+        .select("*")
         .eq("is_published", true)
         .order("created_at")
       if (testErr) throw testErr
@@ -54,7 +54,7 @@ export function useCategoriesWithTests() {
       return { categories, subcategories, tests } as {
         categories: Category[]
         subcategories: Subcategory[]
-        tests: (MockTest & { questions: { count: number }[] })[]
+        tests: MockTest[]
       }
     },
   })

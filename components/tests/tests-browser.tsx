@@ -82,7 +82,7 @@ export function TestsBrowser() {
         ) : (
           filtered.map((t) => {
             const sub = subById.get(t.subcategory_id)
-            const qCount = t.questions?.[0]?.count ?? 0
+            const qCount = t.question_count ?? 0
             return (
               <Card key={t.id} className="flex flex-col">
                 <CardHeader className="gap-2">
@@ -110,7 +110,7 @@ export function TestsBrowser() {
                 </CardContent>
                 <CardFooter>
                   <Button asChild className="w-full" disabled={qCount === 0}>
-                    <Link href={`/tests/${t.id}`}>{qCount === 0 ? "No questions yet" : "Start test"}</Link>
+                    <Link href={`/exam/${t.id}`}>{qCount === 0 ? "No questions yet" : "Start test"}</Link>
                   </Button>
                 </CardFooter>
               </Card>
