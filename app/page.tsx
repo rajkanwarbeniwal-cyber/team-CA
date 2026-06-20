@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { BarChart3, BookmarkCheck, Clock, ListChecks, Trophy, Unlock } from "lucide-react"
@@ -43,6 +44,14 @@ export default async function HomePage() {
       <main className="flex-1">
         <section className="mx-auto max-w-6xl px-4 py-16 md:py-24">
           <div className="mx-auto max-w-3xl text-center">
+            <Image
+              src="/taksha-badge-hi-en.png"
+              alt="Taksha — तक्षा"
+              width={150}
+              height={150}
+              className="mx-auto mb-6 h-32 w-32 rounded-full object-cover shadow-lg ring-1 ring-border md:h-36 md:w-36"
+              priority
+            />
             <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
               UPSC · SSC · Banking · State Exams
             </span>
@@ -50,8 +59,8 @@ export default async function HomePage() {
               Practice smarter. Score higher on every mock test.
             </h1>
             <p className="mt-4 text-pretty text-lg text-muted-foreground">
-              ExamForge gives you timed mock tests, instant scoring, peer leaderboards, and detailed explanations — all
-              in one distraction-free workspace.
+              Taksha gives you timed mock tests, instant scoring, peer leaderboards, and detailed explanations — all in
+              one distraction-free workspace.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button asChild size="lg">
