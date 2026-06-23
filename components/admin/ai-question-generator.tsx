@@ -118,7 +118,7 @@ export function AIQuestionGenerator({ mockTestId, onSuccess }: AIGeneratorProps)
           {/* Exam Type */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="exam">Exam Type</Label>
-            <Select value={examType} onValueChange={(val) => setExamType(val)} disabled={isLoading}>
+            <Select value={examType} onValueChange={(val) => val && setExamType(val)} disabled={isLoading}>
               <SelectTrigger id="exam">
                 <SelectValue />
               </SelectTrigger>

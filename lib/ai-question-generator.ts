@@ -80,6 +80,7 @@ Provide a 2-3 sentence explanation that helps students understand the concept.
         explanation: z.string(),
       }),
       prompt,
+      temperature: 0.7,
     })
 
     return result.object.explanation
@@ -110,9 +111,10 @@ Return a JSON object with:
       model: openai("gpt-4-mini"),
       schema: z.object({
         topics: z.array(z.string()),
-        distribution: z.record(z.number()),
+        distribution: z.record(z.string(), z.number()),
       }),
       prompt,
+      temperature: 0.7,
     })
 
     return result.object
