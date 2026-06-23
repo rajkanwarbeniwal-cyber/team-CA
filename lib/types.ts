@@ -141,6 +141,54 @@ export interface AttemptReviewRow {
   sort_order: number
 }
 
+// Daily Quiz types for gamification
+export interface DailyQuiz {
+  id: string
+  quiz_date: string
+  difficulty: Difficulty
+  category_id: string | null
+  description: string | null
+  created_at: string
+}
+
+export interface DailyQuizAttempt {
+  id: string
+  user_id: string
+  daily_quiz_id: string
+  score: number | null
+  total_marks: number | null
+  correct_count: number | null
+  wrong_count: number | null
+  skipped_count: number | null
+  time_taken_seconds: number | null
+  completed_at: string | null
+  created_at: string
+}
+
+export interface UserStats {
+  id: string
+  user_id: string
+  current_streak: number
+  longest_streak: number
+  daily_quiz_score_avg: number | null
+  total_quizzes_attempted: number
+  points: number
+  last_quiz_date: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface UserAchievement {
+  id: string
+  user_id: string
+  achievement_type: string
+  title: string
+  description: string | null
+  icon_url: string | null
+  unlocked_at: string
+  metadata: Record<string, any> | null
+}
+
 export const OPTION_KEYS: OptionKey[] = ["A", "B", "C", "D"]
 
 export function optionText(q: { option_a: string; option_b: string; option_c: string; option_d: string }, key: OptionKey) {
