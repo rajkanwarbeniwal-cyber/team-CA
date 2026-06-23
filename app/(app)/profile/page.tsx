@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Flame, Trophy, Zap, BookOpen, Star } from "lucide-react"
+import { GamificationStats } from "@/components/profile/gamification-stats"
+import { AchievementBadge } from "@/components/profile/achievement-badge"
 
 export const metadata = {
   title: "My Profile — Taksha",
@@ -82,26 +84,25 @@ export default async function ProfilePage() {
         </div>
       </div>
 
+      {/* Gamification Stats */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Zap className="h-5 w-5 text-accent" />
+          <h2 className="text-2xl font-bold text-foreground">Your Progress</h2>
+        </div>
+        <GamificationStats stats={stats} />
+      </div>
+
       {/* Achievements Section */}
       {(achievements && achievements.length > 0) ? (
-        <div>
-          <h2 className="text-2xl font-bold mb-4">Achievements</h2>
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
-            {achievements.map((achievement: any) => (
-              <Card key={achievement.id} className="glass border-0 p-6">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 p-3">
-                    <Star className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-foreground">{achievement.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">{achievement.description}</p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {new Date(achievement.unlocked_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              </Card>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-primary" />
+            <h2 className="text-2xl font-bold text-foreground">Achievements ({achievements.length})</h2>
+          </div>
+          <div className="flex flex-wrap gap-6">
+            {achievements.map((achievement: any, idx: number) => (
+              <AchievementBadge key={achievement.id} achievement={achievement} index={idx} />
             ))}
           </div>
         </div>

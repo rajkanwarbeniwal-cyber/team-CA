@@ -91,16 +91,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="mt-6 flex-1">
           <NavLinks />
         </div>
-        <div className="flex items-center gap-3 rounded-md border border-sidebar-border p-3">
-          <Avatar className="size-9">
-            <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">{initials}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-sidebar-foreground">{profile?.full_name ?? "Student"}</p>
-            <p className="truncate text-xs capitalize text-sidebar-foreground/60">{profile?.role ?? "student"}</p>
-          </div>
-          <Button variant="ghost" size="icon" onClick={handleSignOut} aria-label="Sign out">
-            <LogOut className="size-4" />
+        <div className="space-y-3">
+          <Link href="/profile" className="flex items-center gap-3 rounded-md border border-sidebar-border p-3 transition-colors hover:bg-sidebar-accent">
+            <Avatar className="size-9">
+              <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">{initials}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-sidebar-foreground">{profile?.full_name ?? "Student"}</p>
+              <p className="truncate text-xs capitalize text-sidebar-foreground/60">{profile?.role ?? "student"}</p>
+            </div>
+          </Link>
+          <Button variant="outline" onClick={handleSignOut} className="justify-start gap-2 w-full">
+            <LogOut className="size-4" /> Sign out
           </Button>
         </div>
       </aside>
