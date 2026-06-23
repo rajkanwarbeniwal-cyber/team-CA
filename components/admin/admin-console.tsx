@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { FolderTree, ListChecks, FileQuestion } from "lucide-react"
+import { FolderTree, ListChecks, FileQuestion, Shield } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatCard } from "@/components/dashboard/stat-card"
@@ -51,6 +51,10 @@ export function AdminConsole() {
           <TabsList>
             <TabsTrigger value="tests">Mock Tests</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
+            <TabsTrigger value="moderation" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Moderation
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="tests" className="mt-4">
             <TestManager
@@ -61,6 +65,11 @@ export function AdminConsole() {
           </TabsContent>
           <TabsContent value="categories" className="mt-4">
             <CategoryManager categories={data.categories} subcategories={data.subcategories} />
+          </TabsContent>
+          <TabsContent value="moderation" className="mt-4">
+            <div className="glass rounded-2xl border-0 p-8 text-center">
+              <p className="text-muted-foreground">Forum moderation panel is being built. You can manage flagged content through the database for now.</p>
+            </div>
           </TabsContent>
         </Tabs>
       )}
