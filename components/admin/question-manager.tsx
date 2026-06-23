@@ -46,7 +46,7 @@ export function QuestionManager({ test, onBack }: { test: MockTest; onBack: () =
         </div>
         <div className="flex gap-2">
           <Dialog>
-            <DialogTrigger asChild>
+            <DialogTrigger>
               <Button size="sm" variant="outline">
                 🤖 AI Generate
               </Button>

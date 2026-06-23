@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select"
 import { Card } from "@/components/ui/card"
 import { generateQuestionsAction } from "@/app/actions/generate-questions"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 interface AIGeneratorProps {
   mockTestId: string
@@ -29,11 +29,10 @@ export function AIQuestionGenerator({ mockTestId, onSuccess }: AIGeneratorProps)
   const [examType, setExamType] = useState("UPSC")
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
-  const { toast } = useToast()
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
-      toast({ title: "Error", description: "Please enter a topic", variant: "destructive" })
+      toast.error("Please enter a topic")
       return
     }
 
@@ -49,25 +48,14 @@ export function AIQuestionGenerator({ mockTestId, onSuccess }: AIGeneratorProps)
 
       if (response.success) {
         setResult(response)
-        toast({
-          title: "Success!",
-          description: `Generated ${response.questionsCreated} questions using AI`,
-        })
+        toast.success(`Generated ${response.questionsCreated} questions using AI`)
         setTopic("")
         onSuccess?.()
       } else {
-        toast({
-          title: "Error",
-          description: response.error || response.message,
-          variant: "destructive",
-        })
+        toast.error(response.error || response.message)
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to generate questions",
-        variant: "destructive",
-      })
+      toast.error("Failed to generate questions")
     } finally {
       setIsLoading(false)
     }
@@ -101,7 +89,7 @@ export function AIQuestionGenerator({ mockTestId, onSuccess }: AIGeneratorProps)
           {/* Difficulty Select */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="difficulty">Difficulty Level</Label>
-            <Select value={difficulty} onValueChange={(val: any) => setDifficulty(val)} disabled={isLoading}>
+            <Select value={difficulty} onValueChange={(val) => setDifficulty(val as "easy" | "medium" | "hard")} disabled={isLoading}>
               <SelectTrigger id="difficulty">
                 <SelectValue />
               </SelectTrigger>

@@ -54,7 +54,7 @@ export async function generateQuestionsAction(
     )
 
     // Insert questions into database
-    const questionsToInsert = generated.questions.map((q, idx) => ({
+    const questionsToInsert = generated.questions.map((q: GeneratedQuestion, idx: number) => ({
       mock_test_id: req.mockTestId,
       question_text: q.question_text,
       options: {
