@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client"
 import { useProfile } from "@/lib/queries"
 import { BrandLogo } from "@/components/brand-logo"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { LanguageToggle } from "@/components/language-toggle"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
@@ -139,6 +140,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <BrandLogo />
           </div>
           <div className="ml-auto flex items-center gap-2">
+            <LanguageToggle />
             <ThemeToggle />
           </div>
         </header>
