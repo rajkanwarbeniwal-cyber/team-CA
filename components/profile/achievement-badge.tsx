@@ -40,8 +40,8 @@ export function AchievementBadge({ achievement, index = 0 }: AchievementBadgePro
       whileHover={{ scale: 1.1 }}
     >
       <Tooltip>
-        <TooltipTrigger asChild>
-          <div className={`glass relative h-20 w-20 rounded-full bg-gradient-to-br ${color} p-0.5 shadow-lg`}>
+        <TooltipTrigger>
+          <div className={`glass relative h-20 w-20 rounded-full bg-gradient-to-br ${color} p-0.5 shadow-lg cursor-pointer transition-transform hover:scale-110`}>
             <div className="flex h-full w-full items-center justify-center rounded-full bg-background text-foreground">
               {icon}
             </div>
