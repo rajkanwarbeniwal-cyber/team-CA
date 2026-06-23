@@ -41,6 +41,7 @@ export interface MockTest {
   per_question_seconds: number
   difficulty: Difficulty
   is_published: boolean
+  question_count: number
   created_at: string
 }
 
@@ -120,6 +121,23 @@ export interface ExamQuestion {
   option_d: string
   marks: number
   negative_marks: number
+  sort_order: number
+}
+
+// A row from the get_attempt_review RPC (full review payload, owner only)
+export interface AttemptReviewRow {
+  question_id: string
+  question_text: string
+  option_a: string
+  option_b: string
+  option_c: string
+  option_d: string
+  correct_option: OptionKey
+  explanation: string | null
+  selected_option: OptionKey | null
+  is_correct: boolean
+  is_bookmarked: boolean
+  is_skipped: boolean
   sort_order: number
 }
 

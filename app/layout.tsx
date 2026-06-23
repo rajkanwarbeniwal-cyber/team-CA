@@ -13,9 +13,13 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "ExamForge — Smart Mock Test Platform",
+  title: "Taksha — Smart Mock Test Platform",
   description:
     "Prepare for UPSC, SSC, Banking and state exams with timed mock tests, instant analytics, leaderboards and detailed answer explanations.",
+  icons: {
+    icon: "/taksha-icon.png",
+    apple: "/taksha-icon.png",
+  },
   generator: "v0.app",
 }
 
