@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { GoogleButton } from "@/components/auth/google-button"
 import { PhoneOtpForm } from "@/components/auth/phone-otp-form"
 import { Loader2 } from "lucide-react"
+import Link from "next/link"
 
 export function LoginForm() {
   const router = useRouter()
@@ -63,7 +64,12 @@ export function LoginForm() {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <Link href="/auth/forgot-password" className="text-xs text-primary hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   type="password"
