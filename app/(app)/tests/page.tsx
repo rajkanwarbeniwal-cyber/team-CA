@@ -1,5 +1,5 @@
-import { TestsBrowser } from "@/components/tests/tests-browser"
+import { CascadingExamSelector } from "@/components/exam/cascading-exam-selector"
 
 export default function TestsPage() {
-  return <TestsBrowser />
+  return <CascadingExamSelector />
 }
