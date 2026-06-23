@@ -17,11 +17,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { useAdminQuestions, useSaveQuestion, useDeleteQuestion } from "@/lib/admin-queries"
 import { OPTION_KEYS, type MockTest, type OptionKey, type Question } from "@/lib/types"
 import { DeleteButton } from "@/components/admin/delete-button"
+import { AIQuestionGenerator } from "@/components/admin/ai-question-generator"
 
 export function QuestionManager({ test, onBack }: { test: MockTest; onBack: () => void }) {
   const { data: questions, isLoading } = useAdminQuestions(test.id)
@@ -42,15 +44,39 @@ export function QuestionManager({ test, onBack }: { test: MockTest; onBack: () =
             <p className="text-xs text-muted-foreground">{questions?.length ?? 0} questions</p>
           </div>
         </div>
-        <Button
-          size="sm"
-          onClick={() => {
-            setEdit(null)
-            setOpen(true)
-          }}
-        >
-          <Plus className="h-4 w-4" /> Add Question
-        </Button>
+        <div className="flex gap-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline">
+                🤖 AI Generate
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Generate Questions with AI</DialogTitle>
+                <DialogDescription>
+                  Use artificial intelligence to automatically create questions for this test
+                </DialogDescription>
+              </DialogHeader>
+              <AIQuestionGenerator
+                mockTestId={test.id}
+                onSuccess={() => {
+                  window.location.reload()
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+
+          <Button
+            size="sm"
+            onClick={() => {
+              setEdit(null)
+              setOpen(true)
+            }}
+          >
+            <Plus className="h-4 w-4" /> Add Question
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
