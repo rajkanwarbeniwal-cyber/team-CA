@@ -189,6 +189,42 @@ export interface UserAchievement {
   metadata: Record<string, any> | null
 }
 
+// Forum types
+export interface ForumPost {
+  id: string
+  user_id: string
+  title: string
+  content: string
+  category: string
+  tags: string[]
+  view_count: number
+  likes_count: number
+  replies_count: number
+  is_pinned: boolean
+  is_locked: boolean
+  status: "draft" | "published" | "deleted" | "flagged"
+  created_at: string
+  updated_at: string
+}
+
+export interface ForumComment {
+  id: string
+  post_id: string
+  user_id: string
+  content: string
+  likes_count: number
+  is_marked_solution: boolean
+  status: "draft" | "published" | "deleted" | "flagged"
+  created_at: string
+  updated_at: string
+}
+
+export interface ForumPostWithMeta extends ForumPost {
+  author_name?: string
+  author_avatar?: string
+  user_liked?: boolean
+}
+
 export const OPTION_KEYS: OptionKey[] = ["A", "B", "C", "D"]
 
 export function optionText(q: { option_a: string; option_b: string; option_c: string; option_d: string }, key: OptionKey) {
