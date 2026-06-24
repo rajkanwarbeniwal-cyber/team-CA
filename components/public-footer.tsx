@@ -2,39 +2,45 @@
 
 import Link from "next/link"
 import { useLanguage } from "@/lib/language-context"
+import { Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Instagram } from "lucide-react"
 
 export function PublicFooter() {
   const { t } = useLanguage()
 
   return (
-    <footer className="border-t border-border bg-muted/50">
+    <footer className="border-t border-border bg-card">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-8">
           {/* Company Info */}
           <div>
-            <h3 className="font-bold text-foreground mb-4">Taksha</h3>
-            <p className="text-sm text-muted-foreground">
-              Smart mock test platform for competitive exams in India.
+            <h3 className="font-bold text-lg text-foreground mb-4">Taksha</h3>
+            <p className="text-sm text-muted-foreground mb-3">
+              Empower your exam preparation with our comprehensive mock tests and learning platform.
+            </p>
+            <p className="text-xs text-muted-foreground font-semibold">
+              www.taksha.edu
             </p>
           </div>
 
-          {/* Product */}
+          {/* Platform */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Product</h4>
+            <h4 className="font-semibold text-foreground mb-4">Platform</h4>
             <ul className="space-y-2">
-              <li><Link href="/tests" className="text-sm text-muted-foreground hover:text-foreground">Mock Tests</Link></li>
-              <li><Link href="/daily-quiz" className="text-sm text-muted-foreground hover:text-foreground">Daily Quiz</Link></li>
-              <li><Link href="/community" className="text-sm text-muted-foreground hover:text-foreground">Community</Link></li>
+              <li><Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">Home</Link></li>
+              <li><Link href="/shop" className="text-sm text-muted-foreground hover:text-primary transition-colors">Pricing</Link></li>
+              <li><Link href="/about" className="text-sm text-muted-foreground hover:text-primary transition-colors">About Us</Link></li>
+              <li><Link href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">Contact</Link></li>
             </ul>
           </div>
 
-          {/* Company */}
+          {/* Resources */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Company</h4>
+            <h4 className="font-semibold text-foreground mb-4">Resources</h4>
             <ul className="space-y-2">
-              <li><Link href="/about" className="text-sm text-muted-foreground hover:text-foreground">About</Link></li>
-              <li><Link href="/contact" className="text-sm text-muted-foreground hover:text-foreground">Contact</Link></li>
-              <li><Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">Privacy</Link></li>
+              <li><Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Blog</Link></li>
+              <li><Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">FAQ</Link></li>
+              <li><Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Help Center</Link></li>
+              <li><Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Guides</Link></li>
             </ul>
           </div>
 
@@ -42,16 +48,90 @@ export function PublicFooter() {
           <div>
             <h4 className="font-semibold text-foreground mb-4">Legal</h4>
             <ul className="space-y-2">
-              <li><Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">Terms of Service</Link></li>
-              <li><Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">Privacy Policy</Link></li>
+              <li><Link href="/privacy-policy" className="text-sm text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms-conditions" className="text-sm text-muted-foreground hover:text-primary transition-colors">Terms & Conditions</Link></li>
+              <li><Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Cookie Policy</Link></li>
+              <li><Link href="/auth/login" className="text-sm text-muted-foreground hover:text-primary transition-colors">Sign In</Link></li>
             </ul>
+          </div>
+
+          {/* Contact Info */}
+          <div>
+            <h4 className="font-semibold text-foreground mb-4">Contact</h4>
+            <div className="space-y-3">
+              <a 
+                href="tel:+917737775985" 
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
+              >
+                <Phone className="w-4 h-4 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                <span>+91 7737775985</span>
+              </a>
+              <a 
+                href="mailto:contact@taksha.edu" 
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
+              >
+                <Mail className="w-4 h-4 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                <span>contact@taksha.edu</span>
+              </a>
+              <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>Taksha Educational Services, India</span>
+              </div>
+              <div className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border">
+                <p className="font-semibold mb-2">Hours:</p>
+                <p>Mon-Fri: 9 AM - 6 PM IST</p>
+                <p>Sat-Sun: 10 AM - 4 PM IST</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="border-t border-border pt-8">
-          <p className="text-sm text-muted-foreground text-center">
-            © {new Date().getFullYear()} Taksha. All rights reserved.
+        {/* Divider */}
+        <div className="border-t border-border my-8"></div>
+
+        {/* Bottom Section */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-muted-foreground text-center md:text-left">
+            © {new Date().getFullYear()} Taksha Educational Services. All rights reserved. | Domain: taksha.edu
           </p>
+          <div className="flex gap-6">
+            <a 
+              href="https://facebook.com" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors hover:scale-110" 
+              title="Facebook"
+            >
+              <Facebook className="w-5 h-5" />
+            </a>
+            <a 
+              href="https://twitter.com" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors hover:scale-110" 
+              title="Twitter"
+            >
+              <Twitter className="w-5 h-5" />
+            </a>
+            <a 
+              href="https://linkedin.com" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors hover:scale-110" 
+              title="LinkedIn"
+            >
+              <Linkedin className="w-5 h-5" />
+            </a>
+            <a 
+              href="https://instagram.com" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors hover:scale-110" 
+              title="Instagram"
+            >
+              <Instagram className="w-5 h-5" />
+            </a>
+          </div>
         </div>
       </div>
     </footer>
