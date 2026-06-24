@@ -82,7 +82,7 @@ export function ApiKeysManager() {
     }
   }
 
-  const handleDeleteKey = async (id: number) {
+  const handleDeleteKey = async (id: number) => {
     if (!confirm("Are you sure you want to delete this API key?")) return
 
     try {
@@ -103,7 +103,7 @@ export function ApiKeysManager() {
             <CardDescription>Securely store and manage your AI service API keys</CardDescription>
           </div>
           <Dialog open={showDialog} onOpenChange={setShowDialog}>
-            <DialogTrigger asChild>
+            <DialogTrigger>
               <Button size="sm">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Key
@@ -117,7 +117,7 @@ export function ApiKeysManager() {
               <form onSubmit={handleAddKey} className="space-y-4">
                 <div>
                   <Label htmlFor="provider">Provider</Label>
-                  <Select value={provider} onValueChange={setProvider}>
+                  <Select value={provider} onValueChange={(value: string) => { if (value) setProvider(value) }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select provider" />
                     </SelectTrigger>

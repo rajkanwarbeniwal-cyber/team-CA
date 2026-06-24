@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { revalidateTag } from "next/cache"
 
 export async function addApiKey(provider: string, keyName: string, apiKey: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Get current user
   const { data: { user } } = await supabase.auth.getUser()
@@ -36,12 +36,12 @@ export async function addApiKey(provider: string, keyName: string, apiKey: strin
 
   if (error) throw new Error(error.message)
 
-  revalidateTag("api-keys")
+  revalidateTag("api-keys", "max")
   return { success: true }
 }
 
 export async function updateApiKey(id: number, apiKey: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Get current user
   const { data: { user } } = await supabase.auth.getUser()
@@ -67,12 +67,12 @@ export async function updateApiKey(id: number, apiKey: string) {
 
   if (error) throw new Error(error.message)
 
-  revalidateTag("api-keys")
+  revalidateTag("api-keys", "max")
   return { success: true }
 }
 
 export async function deleteApiKey(id: number) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Get current user
   const { data: { user } } = await supabase.auth.getUser()
@@ -96,12 +96,12 @@ export async function deleteApiKey(id: number) {
 
   if (error) throw new Error(error.message)
 
-  revalidateTag("api-keys")
+  revalidateTag("api-keys", "max")
   return { success: true }
 }
 
 export async function getApiKey(provider: string, keyName: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Get current user
   const { data: { user } } = await supabase.auth.getUser()
@@ -124,7 +124,7 @@ export async function getApiKey(provider: string, keyName: string) {
 }
 
 export async function listApiKeys() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Get current user
   const { data: { user } } = await supabase.auth.getUser()
