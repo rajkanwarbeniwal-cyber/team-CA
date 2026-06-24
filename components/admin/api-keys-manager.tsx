@@ -117,7 +117,7 @@ export function ApiKeysManager() {
               <form onSubmit={handleAddKey} className="space-y-4">
                 <div>
                   <Label htmlFor="provider">Provider</Label>
-                  <Select value={provider} onValueChange={(value: string) => { if (value) setProvider(value) }}>
+                  <Select value={provider} onValueChange={(value: string | null) => { if (value) setProvider(value) }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select provider" />
                     </SelectTrigger>
