@@ -68,45 +68,45 @@ export function PublicHeader() {
 
             {/* Actions */}
             <div className="flex items-center gap-2">
-            {/* Language Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setLanguage(language === "en" ? "hi" : "en")}
-              title={`Switch to ${language === "en" ? "Hindi" : "English"}`}
-            >
-              <Globe className="h-4 w-4" />
-              <span className="sr-only">Language</span>
-            </Button>
-
-            {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-            >
-              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              <span className="sr-only">Toggle theme</span>
-            </Button>
-
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-
-            {/* Sign In / Sign Up */}
-            <Link href="/auth/login" className="hidden sm:block">
-              <Button variant="outline" size="sm">
-                Sign In
+              {/* Language Toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setLanguage(language === "en" ? "hi" : "en")}
+                title={`Switch to ${language === "en" ? "Hindi" : "English"}`}
+              >
+                <Globe className="h-4 w-4" />
+                <span className="sr-only">Language</span>
               </Button>
-            </Link>
-          </div>
+
+              {/* Theme Toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              >
+                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                <span className="sr-only">Toggle theme</span>
+              </Button>
+
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+
+              {/* Sign In / Sign Up */}
+              <Link href="/auth/login" className="hidden sm:block">
+                <Button variant="outline" size="sm">
+                  Sign In
+                </Button>
+              </Link>
+            </div>
         </div>
 
         {/* Mobile Menu */}
