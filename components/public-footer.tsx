@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useLanguage } from "@/lib/language-context"
-import { Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Instagram } from "lucide-react"
+import { Mail, Phone, MapPin } from "lucide-react"
 
 export function PublicFooter() {
   const { t } = useLanguage()
@@ -99,37 +99,37 @@ export function PublicFooter() {
               href="https://facebook.com" 
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-primary transition-colors hover:scale-110" 
+              className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium" 
               title="Facebook"
             >
-              <Facebook className="w-5 h-5" />
+              f
             </a>
             <a 
               href="https://twitter.com" 
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-primary transition-colors hover:scale-110" 
+              className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium" 
               title="Twitter"
             >
-              <Twitter className="w-5 h-5" />
+              𝕏
             </a>
             <a 
               href="https://linkedin.com" 
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-primary transition-colors hover:scale-110" 
+              className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium" 
               title="LinkedIn"
             >
-              <Linkedin className="w-5 h-5" />
+              in
             </a>
             <a 
               href="https://instagram.com" 
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-primary transition-colors hover:scale-110" 
+              className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium" 
               title="Instagram"
             >
-              <Instagram className="w-5 h-5" />
+              IG
             </a>
           </div>
         </div>
