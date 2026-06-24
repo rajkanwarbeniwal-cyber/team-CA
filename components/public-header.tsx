@@ -107,30 +107,31 @@ export function PublicHeader() {
                 </Button>
               </Link>
             </div>
-        </div>
+          </div>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <nav className="md:hidden border-t border-border bg-background/95 py-4">
-            <div className="space-y-2 px-4">
-              <Link href="/" className="block px-4 py-2 rounded-lg hover:bg-accent/10 text-foreground">
-                Home
-              </Link>
-              <Link href="/shop" className="block px-4 py-2 rounded-lg hover:bg-accent/10 text-foreground">
-                Shop
-              </Link>
-              <Link href="/about" className="block px-4 py-2 rounded-lg hover:bg-accent/10 text-foreground">
-                About Us
-              </Link>
-              <Link href="/contact" className="block px-4 py-2 rounded-lg hover:bg-accent/10 text-foreground">
-                Contact Us
-              </Link>
-              <Link href="/auth/login" className="block px-4 py-2">
-                <Button className="w-full">Sign In</Button>
-              </Link>
-            </div>
-          </nav>
-        )}
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <nav className="md:hidden border-t border-border bg-background/95 py-4">
+              <div className="space-y-2 px-4">
+                <Link href="/" className="block px-4 py-2 rounded-lg hover:bg-accent/10 text-foreground">
+                  Home
+                </Link>
+                <Link href="/shop" className="block px-4 py-2 rounded-lg hover:bg-accent/10 text-foreground">
+                  Shop
+                </Link>
+                <Link href="/about" className="block px-4 py-2 rounded-lg hover:bg-accent/10 text-foreground">
+                  About Us
+                </Link>
+                <Link href="/contact" className="block px-4 py-2 rounded-lg hover:bg-accent/10 text-foreground">
+                  Contact Us
+                </Link>
+                <Link href="/auth/login" className="block px-4 py-2">
+                  <Button className="w-full">Sign In</Button>
+                </Link>
+              </div>
+            </nav>
+          )}
+        </div>
       </header>
 
       {/* Mobile Contact Bar */}
