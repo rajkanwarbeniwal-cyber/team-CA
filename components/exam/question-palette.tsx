@@ -17,9 +17,22 @@ export function QuestionPalette({
   current: number
   onJump: (index: number) => void
 }) {
+  const getStatusText = (index: number) => {
+    const state = answers[questions[index]?.id]
+    const statuses: string[] = []
+    if (state?.selected) statuses.push("answered")
+    if (state?.bookmarked) statuses.push("bookmarked")
+    if (!state?.visited) statuses.push("not visited")
+    return statuses.length > 0 ? statuses.join(", ") : "skipped"
+  }
+
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-5 gap-2 sm:grid-cols-6 lg:grid-cols-5">
+      <div 
+        className="grid grid-cols-5 gap-2 sm:grid-cols-6 lg:grid-cols-5"
+        role="navigation"
+        aria-label="Question palette"
+      >
         {questions.map((q, i) => {
           const state = answers[q.id]
           const answered = !!state?.selected
@@ -31,8 +44,8 @@ export function QuestionPalette({
               key={q.id}
               type="button"
               onClick={() => onJump(i)}
-              aria-label={`Question ${i + 1}${answered ? ", answered" : ""}${bookmarked ? ", bookmarked" : ""}`}
-              aria-current={isCurrent ? "true" : undefined}
+              aria-label={`Question ${i + 1}: ${getStatusText(i)}`}
+              aria-current={isCurrent ? "page" : undefined}
               className={cn(
                 "relative flex h-9 w-9 items-center justify-center rounded-md border text-sm font-medium transition-colors",
                 isCurrent && "ring-2 ring-ring ring-offset-1 ring-offset-background",

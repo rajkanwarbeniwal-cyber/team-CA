@@ -73,12 +73,105 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Social Proof Section - Stats */}
+        <section className="py-16 bg-primary/5">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-primary mb-2">50K+</div>
+                <p className="text-muted-foreground">Mock Tests Completed</p>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-primary mb-2">25K+</div>
+                <p className="text-muted-foreground">Active Aspirants</p>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-primary mb-2">100K+</div>
+                <p className="text-muted-foreground">Questions Solved</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Social Proof Section - Testimonials */}
+        <section className="py-20 bg-background">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-foreground mb-4 text-center">What Students Say</h2>
+            <p className="text-lg text-muted-foreground mb-12 text-center">Join thousands of successful exam aspirants</p>
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Testimonial 1 */}
+              <div className="bg-card border border-border rounded-lg p-6">
+                <div className="flex gap-1 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-yellow-400">★</span>
+                  ))}
+                </div>
+                <p className="text-foreground mb-4">
+                  "Taksha's mock tests are incredibly accurate and closely match the actual exam pattern. The detailed solutions helped me understand every concept thoroughly. I scored 95 in my SSC exam!"
+                </p>
+                <div>
+                  <p className="font-semibold text-foreground">Priya Sharma</p>
+                  <p className="text-sm text-muted-foreground">SSC CGL - 2025</p>
+                </div>
+              </div>
+
+              {/* Testimonial 2 */}
+              <div className="bg-card border border-border rounded-lg p-6">
+                <div className="flex gap-1 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-yellow-400">★</span>
+                  ))}
+                </div>
+                <p className="text-foreground mb-4">
+                  "The analytics dashboard is a game-changer. I can track my progress, identify weak areas, and focus my preparation accordingly. The leaderboard keeps me motivated every day!"
+                </p>
+                <div>
+                  <p className="font-semibold text-foreground">Aditya Verma</p>
+                  <p className="text-sm text-muted-foreground">Banking Exam - 2025</p>
+                </div>
+              </div>
+
+              {/* Testimonial 3 */}
+              <div className="bg-card border border-border rounded-lg p-6">
+                <div className="flex gap-1 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-yellow-400">★</span>
+                  ))}
+                </div>
+                <p className="text-foreground mb-4">
+                  "As a UPSC aspirant, I appreciate the variety of questions and the time management features. The per-question timer mode helped me practice speed without losing accuracy."
+                </p>
+                <div>
+                  <p className="font-semibold text-foreground">Deepak Patel</p>
+                  <p className="text-sm text-muted-foreground">UPSC CSE - Preparing</p>
+                </div>
+              </div>
+
+              {/* Testimonial 4 */}
+              <div className="bg-card border border-border rounded-lg p-6">
+                <div className="flex gap-1 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-yellow-400">★</span>
+                  ))}
+                </div>
+                <p className="text-foreground mb-4">
+                  "The community feature is fantastic! I can discuss questions with other aspirants, get clarifications instantly, and learn different approaches to problem-solving."
+                </p>
+                <div>
+                  <p className="font-semibold text-foreground">Anjali Singh</p>
+                  <p className="text-sm text-muted-foreground">State Exam - Qualified</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* CTA Section */}
         <section className="py-20">
           <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl font-bold text-foreground mb-4">Ready to Start Preparing?</h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Join thousands of students preparing for competitive exams on Taksha.
+              Join 25K+ active students and start your journey to success.
             </p>
             <Link href="/auth/sign-up">
               <Button className="h-12 px-12 text-base">

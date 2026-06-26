@@ -19,6 +19,39 @@ export function DashboardView() {
   const best = total ? Math.round(Math.max(...attempts!.map((a) => Number(a.percentage)))) : 0
   const firstName = (profile?.full_name ?? "there").split(" ")[0]
 
+  // Calculate real date-based streak
+  const calculateStreak = () => {
+    if (!attempts || attempts.length === 0) return 0
+    const sorted = [...attempts].sort((a, b) => 
+      new Date(b.completed_at || 0).getTime() - new Date(a.completed_at || 0).getTime()
+    )
+    
+    let streak = 0
+    let lastDate: Date | null = null
+    
+    for (const attempt of sorted) {
+      if (!attempt.completed_at) continue
+      const attemptDate = new Date(attempt.completed_at)
+      attemptDate.setHours(0, 0, 0, 0)
+      
+      if (!lastDate) {
+        lastDate = attemptDate
+        streak = 1
+      } else {
+        const diff = (lastDate.getTime() - attemptDate.getTime()) / (1000 * 60 * 60 * 24)
+        if (diff === 1) {
+          streak++
+          lastDate = attemptDate
+        } else if (diff > 1) {
+          break
+        }
+      }
+    }
+    return streak
+  }
+  
+  const streak = calculateStreak()
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -43,7 +76,7 @@ export function DashboardView() {
             <StatCard label="Best score" value={`${best}%`} icon={TrophyIcon} accent="warning" />
             <StatCard
               label="Current streak"
-              value={total > 0 ? `${Math.min(total, 7)} days` : "0 days"}
+              value={`${streak} day${streak !== 1 ? 's' : ''}`}
               icon={Flame}
               accent="primary"
             />

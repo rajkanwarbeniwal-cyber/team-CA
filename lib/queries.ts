@@ -32,26 +32,52 @@ export function useCategoriesWithTests() {
   return useQuery({
     queryKey: ["categories-with-tests"],
     queryFn: async () => {
-      const { data: categories, error: catErr } = await supabase
-        .from("categories")
-        .select("*")
-        .order("sort_order")
-      if (catErr) throw catErr
-
-      const { data: subcategories, error: subErr } = await supabase
-        .from("subcategories")
-        .select("*")
-        .order("sort_order")
-      if (subErr) throw subErr
-
-      const { data: tests, error: testErr } = await supabase
+      // Single optimized query with nested selects
+      const { data, error } = await supabase
         .from("mock_tests")
-        .select("*")
+        .select("*, subcategories(*, categories(*))")
         .eq("is_published", true)
         .order("created_at")
-      if (testErr) throw testErr
+      
+      if (error) throw error
 
-      return { categories, subcategories, tests } as {
+      // Reshape the result to match expected return type
+      const categories = new Map<string, Category>()
+      const subcategories = new Map<string, Subcategory>()
+      const tests: MockTest[] = []
+
+      for (const test of data || []) {
+        tests.push({
+          id: test.id,
+          title: test.title,
+          is_published: test.is_published,
+          created_at: test.created_at,
+          duration_minutes: test.duration_minutes,
+          per_question_seconds: test.per_question_seconds,
+          timer_mode: test.timer_mode,
+          instructions: test.instructions,
+          total_questions: test.total_questions,
+          passing_percentage: test.passing_percentage,
+          show_answers_after: test.show_answers_after,
+          subcategory_id: test.subcategory_id,
+        } as unknown as MockTest)
+
+        if (test.subcategories) {
+          for (const sub of Array.isArray(test.subcategories) ? test.subcategories : [test.subcategories]) {
+            subcategories.set(sub.id, sub as Subcategory)
+            if (sub.categories) {
+              const cat = Array.isArray(sub.categories) ? sub.categories[0] : sub.categories
+              if (cat) categories.set(cat.id, cat as Category)
+            }
+          }
+        }
+      }
+
+      return {
+        categories: Array.from(categories.values()).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
+        subcategories: Array.from(subcategories.values()).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
+        tests,
+      } as {
         categories: Category[]
         subcategories: Subcategory[]
         tests: MockTest[]

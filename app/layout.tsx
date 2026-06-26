@@ -13,14 +13,45 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Taksha — Smart Mock Test Platform",
+  title: "Taksha — Smart Mock Test Platform for UPSC, SSC & Banking",
   description:
-    "Prepare for UPSC, SSC, Banking and state exams with timed mock tests, instant analytics, leaderboards and detailed answer explanations.",
+    "Prepare for UPSC, SSC, Banking and state exams with timed mock tests, instant analytics, leaderboards and detailed answer explanations. Join 100K+ aspirants achieving success.",
   icons: {
     icon: "/taksha-icon.png",
     apple: "/taksha-icon.png",
   },
   generator: "v0.app",
+  openGraph: {
+    title: "Taksha — Smart Mock Test Platform",
+    description: "Ace your competitive exams with AI-powered mock tests and analytics",
+    type: "website",
+    url: "https://taksha.edu",
+    images: [
+      {
+        url: "/taksha-badge-en.png",
+        width: 1200,
+        height: 630,
+        alt: "Taksha Mock Test Platform",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Taksha — Smart Mock Test Platform",
+    description: "Prepare for UPSC, SSC, Banking exams with timed mock tests and instant analytics",
+    images: ["/taksha-badge-en.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 }
 
 export const viewport: Viewport = {

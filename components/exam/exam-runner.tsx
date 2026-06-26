@@ -105,9 +105,32 @@ export function ExamRunner({ test }: { test: MockTest }) {
 
   // ---- Clock tick ----
   useEffect(() => {
+    let lastVisibleTime = Date.now()
     const id = setInterval(() => setNow(Date.now()), 250)
-    return () => clearInterval(id)
-  }, [])
+    
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        lastVisibleTime = Date.now()
+      } else {
+        // Tab became visible: adjust deadlines by the hidden duration
+        const hiddenDuration = Date.now() - lastVisibleTime
+        if (store.deadline) {
+          store.perQuestionDeadline = store.perQuestionDeadline 
+            ? store.perQuestionDeadline + hiddenDuration 
+            : store.perQuestionDeadline
+        }
+        if (store.deadline) {
+          store.deadline += hiddenDuration
+        }
+      }
+    }
+    
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+    }
+  }, [store])
 
   const questions = store.questions
   const total = questions.length

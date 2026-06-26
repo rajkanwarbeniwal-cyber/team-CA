@@ -3,7 +3,7 @@
 import type React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, BookOpenCheck, BarChart3, Shield, LogOut, Menu, X, MessageSquare } from "lucide-react"
+import { LayoutDashboard, BookOpenCheck, BarChart3, Shield, LogOut, Menu, X, MessageSquare, Bookmark } from "lucide-react"
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useProfile } from "@/lib/queries"
@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils"
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tests", label: "Mock Tests", icon: BookOpenCheck },
+  { href: "/bookmarks", label: "Bookmarks", icon: Bookmark },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/community", label: "Community", icon: MessageSquare },
 ]
