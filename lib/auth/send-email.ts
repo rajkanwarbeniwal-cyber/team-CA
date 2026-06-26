@@ -7,7 +7,7 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 export async function sendVerificationEmail(email: string, otp: string) {
   try {
     const result = await resend.emails.send({
-      from: "noreply@taksha.app",
+      from: "noreply@taksha.education",
       to: email,
       subject: "Your Taksha Verification Code",
       html: `
@@ -49,7 +49,7 @@ export async function sendVerificationEmail(email: string, otp: string) {
 export async function sendConfirmationEmail(email: string, userName: string) {
   try {
     const result = await resend.emails.send({
-      from: "noreply@taksha.app",
+      from: "noreply@taksha.education",
       to: email,
       subject: "Welcome to Taksha - Your Account is Confirmed",
       html: `
@@ -75,7 +75,7 @@ export async function sendConfirmationEmail(email: string, userName: string) {
           </div>
 
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://taksha.app"}/profile" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://taksha.education"}/profile" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
               Complete Your Profile
             </a>
           </div>

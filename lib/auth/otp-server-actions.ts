@@ -1,27 +1,14 @@
 "use server"
 
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
+import { createClient } from "@supabase/supabase-js"
 import { Resend } from "resend"
 
-function createSupabaseServer() {
-  const cookieStore = cookies()
-  return createServerClient(
+// Service role client — bypasses RLS so server can read/write otp_codes
+function createSupabaseAdmin() {
+  return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      cookies: {
-        async getAll() {
-          return (await cookieStore).getAll()
-        },
-        async setAll(cookiesToSet) {
-          const store = await cookieStore
-          cookiesToSet.forEach(({ name, value, options }) =>
-            store.set(name, value, options)
-          )
-        },
-      },
-    }
+    { auth: { autoRefreshToken: false, persistSession: false } }
   )
 }
 
@@ -37,7 +24,7 @@ export async function sendOTPEmailAction(email: string, otp: string) {
 
   try {
     const result = await resend.emails.send({
-      from: "Taksha <noreply@taksha.app>",
+      from: "Taksha <noreply@taksha.education>",
       to: email,
       subject: `${otp} — Your Taksha Verification Code`,
       html: `
@@ -72,7 +59,7 @@ function generateOTP(): string {
 }
 
 export async function createAndSendEmailOTP(email: string): Promise<{ success: boolean; error?: string }> {
-  const supabase = createSupabaseServer()
+  const supabase = createSupabaseAdmin()
   const otp = generateOTP()
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
 
@@ -103,7 +90,7 @@ export async function createAndSendEmailOTP(email: string): Promise<{ success: b
 }
 
 export async function createAndSendPhoneOTP(phone: string): Promise<{ success: boolean; error?: string }> {
-  const supabase = createSupabaseServer()
+  const supabase = createSupabaseAdmin()
   const otp = generateOTP()
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
 
@@ -134,7 +121,7 @@ export async function verifyOTPAction(
   identifier: string,
   otp: string
 ): Promise<{ valid: boolean; error?: string }> {
-  const supabase = createSupabaseServer()
+  const supabase = createSupabaseAdmin()
 
   const { data, error } = await supabase
     .from("otp_codes")
@@ -166,14 +153,14 @@ export async function sendConfirmationEmailAction(email: string, userName: strin
 
   try {
     const result = await resend.emails.send({
-      from: "Taksha <noreply@taksha.app>",
+      from: "Taksha <noreply@taksha.education>",
       to: email,
       subject: "Welcome to Taksha!",
       html: `
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;">
           <h1 style="color:#3b82f6;">Welcome, ${userName}!</h1>
           <p>Your account is ready. Start your exam preparation now.</p>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://taksha.app"}/dashboard"
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://taksha.education"}/dashboard"
              style="display:inline-block;background:#3b82f6;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;margin-top:16px;">
             Go to Dashboard
           </a>
@@ -185,3 +172,4 @@ export async function sendConfirmationEmailAction(email: string, userName: strin
     return { success: false }
   }
 }
+
