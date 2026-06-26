@@ -145,3 +145,64 @@
     @apply font-sans;
   }
 }
+
+@layer components {
+  /* Input field enhancement for Gen Z aesthetic */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  textarea {
+    @apply transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:ring-primary;
+  }
+
+  /* Placeholder styling */
+  input::placeholder {
+    @apply text-muted-foreground/50 transition-opacity duration-300;
+  }
+
+  input:focus::placeholder {
+    @apply opacity-30;
+  }
+
+  /* Gen Z button styles */
+  button {
+    @apply transition-all duration-200 active:scale-95;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-out {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
