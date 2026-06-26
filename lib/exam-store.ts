@@ -28,6 +28,9 @@ interface ExamState {
   deadline: number | null // epoch ms for total mode
   perQuestionDeadline: number | null // epoch ms for per-question mode
   finished: boolean
+  
+  // recovery state
+  isRecovered: boolean // flag to indicate if state was recovered from crash
 
   // actions
   initExam: (payload: {
@@ -70,6 +73,7 @@ export const useExamStore = create<ExamState>()(
       deadline: null,
       perQuestionDeadline: null,
       finished: false,
+      isRecovered: false,
 
       initExam: (payload) => {
         const now = Date.now()
@@ -166,6 +170,7 @@ export const useExamStore = create<ExamState>()(
           deadline: null,
           perQuestionDeadline: null,
           finished: false,
+          isRecovered: false,
         }),
 
       answeredCount: () => {
@@ -195,6 +200,7 @@ export const useExamStore = create<ExamState>()(
         deadline: s.deadline,
         perQuestionDeadline: s.perQuestionDeadline,
         finished: s.finished,
+        isRecovered: s.isRecovered,
       }),
     },
   ),
