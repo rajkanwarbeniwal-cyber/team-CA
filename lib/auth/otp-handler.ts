@@ -11,8 +11,8 @@ function getServiceClient() {
   )
 }
 
-/** Generate a random 6-digit OTP */
-export function generateOTP(): string {
+/** Generate a random 6-digit OTP (private — not exported from a "use server" file) */
+function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString()
 }
 
