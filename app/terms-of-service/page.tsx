@@ -44,8 +44,8 @@ export default function TermsOfServicePage() {
           <section>
             <p>
               These Terms of Service ("Terms") govern your use of <strong>Taksha</strong> ("we", "our", "us"),
-              accessible at <strong>taksha.app</strong>. By creating an account or using the Service, you agree to
-              be bound by these Terms. If you do not agree, please do not use the Service.
+              accessible at <strong>taksha.education</strong>. By creating an account or using the Service, you agree
+              to be bound by these Terms. If you do not agree, please do not use the Service.
             </p>
           </section>
 
@@ -63,10 +63,9 @@ export default function TermsOfServicePage() {
               <li>You are responsible for maintaining the confidentiality of your account credentials.</li>
               <li>You must provide accurate and complete information during registration and keep it up to date.</li>
               <li>You are responsible for all activities that occur under your account.</li>
-              <li>You must notify us immediately at{" "}
-                <a href="mailto:support@taksha.app" className="text-primary hover:underline">
-                  support@taksha.app
-                </a>{" "}
+              <li>
+                You must notify us immediately at{" "}
+                <a href="mailto:support@taksha.education">support@taksha.education</a>{" "}
                 if you suspect unauthorized use of your account.
               </li>
             </ul>
@@ -194,13 +193,19 @@ export default function TermsOfServicePage() {
               <p><strong>Taksha</strong></p>
               <p>
                 Email:{" "}
-                <a href="mailto:support@taksha.app" className="text-primary hover:underline">
-                  support@taksha.app
+                <a href="mailto:support@taksha.education" className="text-primary hover:underline">
+                  support@taksha.education
                 </a>
               </p>
-              <p>Website: <a href="https://taksha.app" className="text-primary hover:underline">taksha.app</a></p>
+              <p>
+                Website:{" "}
+                <a href="https://taksha.education" className="text-primary hover:underline">
+                  taksha.education
+                </a>
+              </p>
             </div>
           </Section>
+
         </div>
       </main>
 

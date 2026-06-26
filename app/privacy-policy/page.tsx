@@ -45,7 +45,7 @@ export default function PrivacyPolicyPage() {
             <p>
               Welcome to <strong>Taksha</strong> ("we", "our", or "us"). This Privacy Policy explains how we collect,
               use, disclose, and safeguard your information when you use our platform at{" "}
-              <strong>taksha.app</strong> (the "Service"). Please read this policy carefully. By using the Service,
+              <strong>taksha.education</strong> (the "Service"). Please read this policy carefully. By using the Service,
               you agree to the practices described here.
             </p>
           </section>
@@ -98,8 +98,8 @@ export default function PrivacyPolicyPage() {
             <p>
               We retain your account and usage data for as long as your account is active or as needed to provide the
               Service. You may request deletion of your account and associated data at any time by contacting us at{" "}
-              <a href="mailto:privacy@taksha.app" className="text-primary hover:underline">
-                privacy@taksha.app
+              <a href="mailto:privacy@taksha.education" className="text-primary hover:underline">
+                privacy@taksha.education
               </a>
               . We will fulfil deletion requests within 30 days, except where retention is required by law.
             </p>
@@ -140,8 +140,8 @@ export default function PrivacyPolicyPage() {
             </ul>
             <p>
               To exercise any of these rights, contact us at{" "}
-              <a href="mailto:privacy@taksha.app" className="text-primary hover:underline">
-                privacy@taksha.app
+              <a href="mailto:privacy@taksha.education" className="text-primary hover:underline">
+                privacy@taksha.education
               </a>
               .
             </p>
@@ -170,11 +170,11 @@ export default function PrivacyPolicyPage() {
               <p><strong>Taksha</strong></p>
               <p>
                 Email:{" "}
-                <a href="mailto:privacy@taksha.app" className="text-primary hover:underline">
-                  privacy@taksha.app
+                <a href="mailto:privacy@taksha.education" className="text-primary hover:underline">
+                  privacy@taksha.education
                 </a>
               </p>
-              <p>Website: <a href="https://taksha.app" className="text-primary hover:underline">taksha.app</a></p>
+              <p>Website: <a href="https://taksha.education" className="text-primary hover:underline">taksha.education</a></p>
             </div>
           </Section>
         </div>
