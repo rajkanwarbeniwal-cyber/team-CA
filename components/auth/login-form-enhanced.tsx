@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { GoogleButton } from "@/components/auth/google-button"
 import { OTPVerification } from "@/components/auth/otp-verification"
 import { sendPhoneOTP, sendEmailOTP, verifyPhoneOTP, verifyEmailOTP } from "@/lib/auth/otp-handler"
+import { sendConfirmationEmailAction } from "@/lib/auth/otp-server-actions"
 import { Loader2, Eye, EyeOff, CheckCircle } from "lucide-react"
 
 export function LoginFormEnhanced() {
@@ -80,6 +81,8 @@ export function LoginFormEnhanced() {
 
       // Login user after OTP verification
       const supabase = createClient()
+      const isNewUser = true
+      
       const { error } = await supabase.auth.signInWithPassword({
         email: `${phone}@phone.taksha.local`,
         password: otp,
@@ -87,7 +90,7 @@ export function LoginFormEnhanced() {
 
       if (error && error.message.includes("invalid")) {
         // User doesn't exist, sign them up
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { error: signUpError, data } = await supabase.auth.signUp({
           email: `${phone}@phone.taksha.local`,
           password: otp,
         })
@@ -96,6 +99,9 @@ export function LoginFormEnhanced() {
           console.error("[v0] Sign up error:", signUpError)
           return false
         }
+
+        // Send confirmation email to user's phone (simulate with console)
+        console.log(`[v0] New user registered with phone: ${phone}`)
       } else if (error) {
         console.error("[v0] Sign in error:", error)
         return false
@@ -140,6 +146,8 @@ export function LoginFormEnhanced() {
 
       // Login user after OTP verification
       const supabase = createClient()
+      let isNewUser = false
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password: otp,
@@ -155,6 +163,16 @@ export function LoginFormEnhanced() {
         if (signUpError) {
           console.error("[v0] Sign up error:", signUpError)
           return false
+        }
+        isNewUser = true
+
+        // Send confirmation email to new user
+        try {
+          const emailName = email.split("@")[0]
+          await sendConfirmationEmailAction(email, emailName)
+          console.log("[v0] Confirmation email sent to:", email)
+        } catch (emailError) {
+          console.warn("[v0] Could not send confirmation email:", emailError)
         }
       } else if (error) {
         console.error("[v0] Sign in error:", error)

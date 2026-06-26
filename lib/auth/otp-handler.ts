@@ -63,17 +63,20 @@ export async function sendEmailOTP(email: string): Promise<string> {
     const otp = generateOTP()
     storeOTP(`email:${email}`, otp)
 
-    // Try to send via Resend in server context
+    // Try to send via server action (Resend)
     try {
-      const { sendVerificationEmail } = await import("@/lib/auth/send-email")
-      const result = await sendVerificationEmail(email, otp)
+      const { sendOTPEmailAction } = await import("@/lib/auth/otp-server-actions")
+      const result = await sendOTPEmailAction(email, otp)
       
-      if (!result.success) {
-        console.warn("[v0] Failed to send email via Resend, falling back to console log")
-        console.log(`[v0] OTP for ${email}: ${otp}`)
+      if (result.success) {
+        console.log(`[v0] OTP email sent successfully to ${email}`)
+      } else {
+        console.warn(`[v0] Failed to send email via Resend: ${result.error}`)
+        console.log(`[v0] OTP for ${email}: ${otp} (fallback to console)`)
       }
     } catch (error) {
-      // If Resend not available or in client context, log to console
+      // If Resend not available or error occurs, log to console for development
+      console.warn("[v0] Could not send email via Resend, using console fallback")
       console.log(`[v0] OTP for ${email}: ${otp}`)
     }
 
