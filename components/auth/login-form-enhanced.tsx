@@ -4,7 +4,6 @@ import type React from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,9 +11,13 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { GoogleButton } from "@/components/auth/google-button"
 import { OTPVerification } from "@/components/auth/otp-verification"
-import { sendPhoneOTP, sendEmailOTP, verifyPhoneOTP, verifyEmailOTP } from "@/lib/auth/otp-handler"
-import { sendConfirmationEmailAction } from "@/lib/auth/otp-server-actions"
-import { Loader2, Eye, EyeOff, CheckCircle } from "lucide-react"
+import {
+  sendEmailOTPAction,
+  sendPhoneOTPAction,
+  verifyEmailOTPAction,
+  verifyPhoneOTPAction,
+} from "@/lib/auth/otp-server-actions"
+import { Loader2, Eye, EyeOff } from "lucide-react"
 
 export function LoginFormEnhanced() {
   const router = useRouter()
@@ -74,65 +77,27 @@ export function LoginFormEnhanced() {
   async function handlePhoneSendOTP(e: React.FormEvent) {
     e.preventDefault()
     if (!isPhoneValid) return
-
     setPhoneLoading(true)
-
-    try {
-      const otp = await sendPhoneOTP(phone)
-      console.log("[v0] OTP sent to phone - check console for code")
-      toast.success("OTP sent to your phone!")
-      setPhoneStage("otp")
-    } catch (error) {
-      toast.error("Failed to send OTP. Please try again.")
-      console.error("[v0] Error sending phone OTP:", error)
-    } finally {
-      setPhoneLoading(false)
+    const result = await sendPhoneOTPAction(phone)
+    setPhoneLoading(false)
+    if (!result.success) {
+      toast.error(result.error ?? "OTP bhejne mein dikkat aayi")
+      return
     }
+    toast.success("OTP bhej diya gaya!")
+    setPhoneStage("otp")
   }
 
   async function handlePhoneVerifyOTP(otp: string): Promise<boolean> {
-    try {
-      const isValid = verifyPhoneOTP(phone, otp)
-      if (!isValid) {
-        return false
-      }
-
-      // Login user after OTP verification
-      const supabase = createClient()
-      const isNewUser = true
-      
-      const { error } = await supabase.auth.signInWithPassword({
-        email: `${phone}@phone.taksha.local`,
-        password: otp,
-      })
-
-      if (error && error.message.includes("invalid")) {
-        // User doesn't exist, sign them up
-        const { error: signUpError, data } = await supabase.auth.signUp({
-          email: `${phone}@phone.taksha.local`,
-          password: otp,
-        })
-
-        if (signUpError) {
-          console.error("[v0] Sign up error:", signUpError)
-          return false
-        }
-
-        // Send confirmation email to user's phone (simulate with console)
-        console.log(`[v0] New user registered with phone: ${phone}`)
-      } else if (error) {
-        console.error("[v0] Sign in error:", error)
-        return false
-      }
-
-      toast.success("Signed in successfully!")
-      router.push(redirect)
-      router.refresh()
-      return true
-    } catch (error) {
-      console.error("[v0] Phone verification error:", error)
+    const result = await verifyPhoneOTPAction(phone, otp)
+    if (!result.success) {
+      toast.error(result.error ?? "OTP galat hai")
       return false
     }
+    toast.success("Login ho gaya!")
+    router.push(redirect)
+    router.refresh()
+    return true
   }
 
   // Email password login
@@ -169,72 +134,27 @@ export function LoginFormEnhanced() {
   async function handleEmailSendOTP(e: React.FormEvent) {
     e.preventDefault()
     if (!isEmailValid) return
-
     setEmailLoading(true)
-
-    try {
-      const otp = await sendEmailOTP(email)
-      console.log("[v0] OTP sent to email - check console for code")
-      toast.success("OTP sent to your email!")
-      setEmailStage("otp")
-    } catch (error) {
-      toast.error("Failed to send OTP. Please try again.")
-      console.error("[v0] Error sending email OTP:", error)
-    } finally {
-      setEmailLoading(false)
+    const result = await sendEmailOTPAction(email)
+    setEmailLoading(false)
+    if (!result.success) {
+      toast.error(result.error ?? "OTP bhejne mein dikkat aayi")
+      return
     }
+    toast.success("OTP aapki email par bhej diya gaya!")
+    setEmailStage("otp")
   }
 
   async function handleEmailVerifyOTP(otp: string): Promise<boolean> {
-    try {
-      const isValid = verifyEmailOTP(email, otp)
-      if (!isValid) {
-        return false
-      }
-
-      // Login user after OTP verification
-      const supabase = createClient()
-      let isNewUser = false
-      
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password: otp,
-      })
-
-      if (error && error.message.includes("invalid")) {
-        // User doesn't exist, sign them up
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password: otp,
-        })
-
-        if (signUpError) {
-          console.error("[v0] Sign up error:", signUpError)
-          return false
-        }
-        isNewUser = true
-
-        // Send confirmation email to new user
-        try {
-          const emailName = email.split("@")[0]
-          await sendConfirmationEmailAction(email, emailName)
-          console.log("[v0] Confirmation email sent to:", email)
-        } catch (emailError) {
-          console.warn("[v0] Could not send confirmation email:", emailError)
-        }
-      } else if (error) {
-        console.error("[v0] Sign in error:", error)
-        return false
-      }
-
-      toast.success("Signed in successfully!")
-      router.push(redirect)
-      router.refresh()
-      return true
-    } catch (error) {
-      console.error("[v0] Email verification error:", error)
+    const result = await verifyEmailOTPAction(email, otp)
+    if (!result.success) {
+      toast.error(result.error ?? "OTP galat hai")
       return false
     }
+    toast.success(result.isNewUser ? "Account ban gaya! Welcome to Taksha!" : "Login ho gaya!")
+    router.push(redirect)
+    router.refresh()
+    return true
   }
 
   return (
