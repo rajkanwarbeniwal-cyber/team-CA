@@ -13,6 +13,7 @@ interface OTPVerificationProps {
   onVerify: (otp: string) => Promise<boolean>
   onBack: () => void
   isLoading?: boolean
+  onResend?: () => Promise<{ success: boolean; error?: string }>
 }
 
 export function OTPVerification({
@@ -21,6 +22,7 @@ export function OTPVerification({
   onVerify,
   onBack,
   isLoading = false,
+  onResend,
 }: OTPVerificationProps) {
   const [otp, setOtp] = useState("")
   const [error, setError] = useState("")
@@ -81,11 +83,17 @@ export function OTPVerification({
     }
   }
 
-  const handleResend = () => {
+  const handleResend = async () => {
     setOtp("")
     setError("")
     setTimeLeft(30)
     setCanResend(false)
+    if (onResend) {
+      const result = await onResend()
+      if (result.success) {
+        // toast shown by parent
+      }
+    }
   }
 
   if (verified) {
@@ -126,7 +134,7 @@ export function OTPVerification({
           type="text"
           inputMode="numeric"
           placeholder="000000"
-          maxLength="6"
+          maxLength={6}
           value={otp}
           onChange={handleOtpChange}
           disabled={verifying}

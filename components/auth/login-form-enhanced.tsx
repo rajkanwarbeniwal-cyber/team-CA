@@ -12,290 +12,222 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { GoogleButton } from "@/components/auth/google-button"
 import { OTPVerification } from "@/components/auth/otp-verification"
-import { sendPhoneOTP, sendEmailOTP, verifyPhoneOTP, verifyEmailOTP } from "@/lib/auth/otp-handler"
-import { sendConfirmationEmailAction } from "@/lib/auth/otp-server-actions"
-import { Loader2, Eye, EyeOff, CheckCircle } from "lucide-react"
+import {
+  createAndSendEmailOTP,
+  createAndSendPhoneOTP,
+  verifyOTPAction,
+} from "@/lib/auth/otp-server-actions"
+import { Loader2, Eye, EyeOff } from "lucide-react"
+
+type LoginMethod = "otp" | "password"
+type Stage = "input" | "otp"
 
 export function LoginFormEnhanced() {
   const router = useRouter()
   const params = useSearchParams()
   const redirect = params.get("redirect") || "/dashboard"
 
-  // Phone tab state
+  // ── Phone tab ──────────────────────────────────────────────────────────────
   const [phone, setPhone] = useState("")
-  const [phoneStage, setPhoneStage] = useState<"input" | "otp">("input")
+  const [phoneStage, setPhoneStage] = useState<Stage>("input")
   const [phoneLoading, setPhoneLoading] = useState(false)
 
-  // Email tab state
+  // ── Email tab ──────────────────────────────────────────────────────────────
   const [email, setEmail] = useState("")
-  const [emailStage, setEmailStage] = useState<"input" | "otp">("input")
+  const [emailMethod, setEmailMethod] = useState<LoginMethod>("otp")
+  const [emailStage, setEmailStage] = useState<Stage>("input")
   const [emailLoading, setEmailLoading] = useState(false)
-  const [emailMethod, setEmailMethod] = useState<"otp" | "password">("otp")
-  const [emailPassword, setEmailPassword] = useState("")
-  const [showEmailPassword, setShowEmailPassword] = useState(false)
-  const [emailPasswordLoading, setEmailPasswordLoading] = useState(false)
 
-  // Validation helpers
-  const validatePhone = (value: string) => {
-    const digits = value.replace(/\D/g, "")
-    return digits.length <= 10 ? digits : digits.slice(0, 10)
-  }
+  // Password state
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [passwordLoading, setPasswordLoading] = useState(false)
 
-  const validateEmail = (value: string) => {
-    return value.slice(0, 40)
-  }
-
+  // ── Validation ─────────────────────────────────────────────────────────────
+  const cleanPhone = (v: string) => v.replace(/\D/g, "").slice(0, 10)
   const isPhoneValid = phone.length === 10
-  const isEmailValid = email.length > 0 && email.length <= 40 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  const isEmailPasswordValid =
-    email.length > 0 &&
-    email.length <= 40 &&
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
-    emailPassword.length >= 6 &&
-    emailPassword.length <= 16
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  const isPasswordValid = isEmailValid && password.length >= 6
 
-  const validateEmailPassword = (value: string) => {
-    return value.slice(0, 16)
-  }
-
-  const handleEmailPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmailPassword(validateEmailPassword(e.target.value))
-  }
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPhone(validatePhone(e.target.value))
-  }
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(validateEmail(e.target.value))
-  }
-
-  // Phone OTP flow
+  // ── Phone handlers ─────────────────────────────────────────────────────────
   async function handlePhoneSendOTP(e: React.FormEvent) {
     e.preventDefault()
     if (!isPhoneValid) return
-
     setPhoneLoading(true)
-
     try {
-      const otp = await sendPhoneOTP(phone)
-      console.log("[v0] OTP sent to phone - check console for code")
-      toast.success("OTP sent to your phone!")
+      const result = await createAndSendPhoneOTP(phone)
+      if (!result.success) {
+        toast.error(result.error || "Failed to send OTP")
+        return
+      }
+      toast.success("OTP sent! Check your phone (or console in dev)")
       setPhoneStage("otp")
-    } catch (error) {
+    } catch {
       toast.error("Failed to send OTP. Please try again.")
-      console.error("[v0] Error sending phone OTP:", error)
     } finally {
       setPhoneLoading(false)
     }
   }
 
   async function handlePhoneVerifyOTP(otp: string): Promise<boolean> {
-    try {
-      const isValid = verifyPhoneOTP(phone, otp)
-      if (!isValid) {
-        return false
-      }
-
-      // Login user after OTP verification
-      const supabase = createClient()
-      const isNewUser = true
-      
-      const { error } = await supabase.auth.signInWithPassword({
-        email: `${phone}@phone.taksha.local`,
-        password: otp,
-      })
-
-      if (error && error.message.includes("invalid")) {
-        // User doesn't exist, sign them up
-        const { error: signUpError, data } = await supabase.auth.signUp({
-          email: `${phone}@phone.taksha.local`,
-          password: otp,
-        })
-
-        if (signUpError) {
-          console.error("[v0] Sign up error:", signUpError)
-          return false
-        }
-
-        // Send confirmation email to user's phone (simulate with console)
-        console.log(`[v0] New user registered with phone: ${phone}`)
-      } else if (error) {
-        console.error("[v0] Sign in error:", error)
-        return false
-      }
-
-      toast.success("Signed in successfully!")
-      router.push(redirect)
-      router.refresh()
-      return true
-    } catch (error) {
-      console.error("[v0] Phone verification error:", error)
+    const { valid, error } = await verifyOTPAction(`phone:${phone}`, otp)
+    if (!valid) {
+      toast.error(error || "Invalid OTP")
       return false
     }
-  }
 
-  // Email password login
-  async function handleEmailPasswordLogin(e: React.FormEvent) {
-    e.preventDefault()
-    if (!isEmailPasswordValid) return
-
-    setEmailPasswordLoading(true)
+    // Sign in or create the user via a pseudo email
     const supabase = createClient()
+    const pseudoEmail = `${phone}@phone.taksha.local`
+    const pseudoPassword = `phone_${phone}_secret_v1`
 
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password: emailPassword,
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email: pseudoEmail,
+      password: pseudoPassword,
+    })
+
+    if (signInErr) {
+      // First time — create account
+      const { error: signUpErr } = await supabase.auth.signUp({
+        email: pseudoEmail,
+        password: pseudoPassword,
+        options: { data: { role: "student" } },
       })
-
-      setEmailPasswordLoading(false)
-
-      if (error) {
-        toast.error(error.message || "Invalid email or password")
-        return
+      if (signUpErr) {
+        toast.error("Could not create account. Try again.")
+        return false
       }
-
-      toast.success("Signed in successfully!")
-      router.push(redirect)
-      router.refresh()
-    } catch (error) {
-      setEmailPasswordLoading(false)
-      toast.error("An error occurred. Please try again.")
     }
+
+    toast.success("Signed in successfully!")
+    router.push(redirect)
+    router.refresh()
+    return true
   }
 
-  // Email OTP flow
+  // ── Email OTP handlers ─────────────────────────────────────────────────────
   async function handleEmailSendOTP(e: React.FormEvent) {
     e.preventDefault()
     if (!isEmailValid) return
-
     setEmailLoading(true)
-
     try {
-      const otp = await sendEmailOTP(email)
-      console.log("[v0] OTP sent to email - check console for code")
+      const result = await createAndSendEmailOTP(email)
+      if (!result.success) {
+        toast.error(result.error || "Failed to send OTP")
+        return
+      }
       toast.success("OTP sent to your email!")
       setEmailStage("otp")
-    } catch (error) {
+    } catch {
       toast.error("Failed to send OTP. Please try again.")
-      console.error("[v0] Error sending email OTP:", error)
     } finally {
       setEmailLoading(false)
     }
   }
 
   async function handleEmailVerifyOTP(otp: string): Promise<boolean> {
-    try {
-      const isValid = verifyEmailOTP(email, otp)
-      if (!isValid) {
-        return false
-      }
+    const { valid, error } = await verifyOTPAction(`email:${email}`, otp)
+    if (!valid) {
+      toast.error(error || "Invalid OTP")
+      return false
+    }
 
-      // Login user after OTP verification
-      const supabase = createClient()
-      let isNewUser = false
-      
-      const { error } = await supabase.auth.signInWithPassword({
+    // Try sign in first; if fails, create account
+    const supabase = createClient()
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email,
+      password: `otp_user_${email}_v1`,
+    })
+
+    if (signInErr) {
+      const { error: signUpErr } = await supabase.auth.signUp({
         email,
-        password: otp,
+        password: `otp_user_${email}_v1`,
+        options: { data: { role: "student" } },
       })
-
-      if (error && error.message.includes("invalid")) {
-        // User doesn't exist, sign them up
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password: otp,
-        })
-
-        if (signUpError) {
-          console.error("[v0] Sign up error:", signUpError)
-          return false
-        }
-        isNewUser = true
-
-        // Send confirmation email to new user
-        try {
-          const emailName = email.split("@")[0]
-          await sendConfirmationEmailAction(email, emailName)
-          console.log("[v0] Confirmation email sent to:", email)
-        } catch (emailError) {
-          console.warn("[v0] Could not send confirmation email:", emailError)
-        }
-      } else if (error) {
-        console.error("[v0] Sign in error:", error)
+      if (signUpErr) {
+        toast.error("Could not authenticate. Try signing up first.")
         return false
       }
+    }
 
+    toast.success("Signed in successfully!")
+    router.push(redirect)
+    router.refresh()
+    return true
+  }
+
+  // ── Email password login ───────────────────────────────────────────────────
+  async function handlePasswordLogin(e: React.FormEvent) {
+    e.preventDefault()
+    if (!isPasswordValid) return
+    setPasswordLoading(true)
+    const supabase = createClient()
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) {
+        toast.error(error.message || "Invalid email or password")
+        return
+      }
       toast.success("Signed in successfully!")
       router.push(redirect)
       router.refresh()
-      return true
-    } catch (error) {
-      console.error("[v0] Email verification error:", error)
-      return false
+    } catch {
+      toast.error("An error occurred. Please try again.")
+    } finally {
+      setPasswordLoading(false)
     }
   }
 
   return (
-    <Card className="border-border/60 shadow-lg backdrop-blur-sm bg-background/95">
+    <Card className="border-border/60 shadow-lg bg-background/95">
       <CardContent className="pt-6">
         <Tabs defaultValue="phone" className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-muted/50">
-            <TabsTrigger value="phone" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger
+              value="phone"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
               Phone
             </TabsTrigger>
-            <TabsTrigger value="email" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger
+              value="email"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
               Email
             </TabsTrigger>
           </TabsList>
 
-          {/* Phone Login Tab */}
-          <TabsContent value="phone" className="mt-6 space-y-4">
+          {/* ── Phone Tab ── */}
+          <TabsContent value="phone" className="mt-6">
             {phoneStage === "input" ? (
               <form onSubmit={handlePhoneSendOTP} className="flex flex-col gap-4">
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="phone" className="text-base font-semibold">
+                  <Label htmlFor="phone" className="text-sm font-semibold">
                     Phone Number
                   </Label>
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center pointer-events-none pl-3">
-                      <span className="text-lg font-medium text-foreground/30 opacity-30 transition-opacity duration-300">
-                        {phone ? "" : "7737775985"}
-                      </span>
-                    </div>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      inputMode="numeric"
-                      placeholder=""
-                      maxLength="10"
-                      value={phone}
-                      onChange={handlePhoneChange}
-                      className="text-lg pr-12 bg-transparent relative z-10"
-                      autoFocus
-                    />
-                    {phone.length > 0 && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium">
-                        {phone.length}/10
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Enter exactly 10 digits</p>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="Enter 10-digit number"
+                    maxLength={10}
+                    value={phone}
+                    onChange={(e) => setPhone(cleanPhone(e.target.value))}
+                    className="text-lg tracking-wider"
+                    autoFocus
+                  />
+                  <p className="text-xs text-muted-foreground">{phone.length}/10 digits</p>
                 </div>
-
                 <Button
                   type="submit"
                   disabled={!isPhoneValid || phoneLoading}
-                  className="w-full h-10 text-base font-semibold mt-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all"
+                  className="w-full h-10 text-base font-semibold"
                 >
                   {phoneLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Sending OTP...
-                    </>
+                    <><Loader2 className="h-4 w-4 animate-spin mr-2" />Sending OTP...</>
                   ) : (
-                    "Send OTP"
+                    "Send OTP via SMS"
                   )}
                 </Button>
               </form>
@@ -304,92 +236,76 @@ export function LoginFormEnhanced() {
                 contact={phone}
                 method="phone"
                 onVerify={handlePhoneVerifyOTP}
-                onBack={() => {
-                  setPhoneStage("input")
-                  setPhone("")
-                }}
+                onBack={() => { setPhoneStage("input"); setPhone("") }}
                 isLoading={phoneLoading}
+                onResend={() => createAndSendPhoneOTP(phone)}
               />
             )}
           </TabsContent>
 
-          {/* Email Login Tab */}
-          <TabsContent value="email" className="mt-6 space-y-4">
+          {/* ── Email Tab ── */}
+          <TabsContent value="email" className="mt-6">
             {emailStage === "input" ? (
-              <>
-                {/* Email method toggle */}
-                <div className="flex gap-2 mb-4">
+              <div className="flex flex-col gap-4">
+                {/* Method toggle */}
+                <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      setEmailMethod("otp")
-                      setEmailPassword("")
-                    }}
-                    className={`flex-1 py-2 px-3 rounded-lg font-medium text-sm transition-all ${
+                    onClick={() => { setEmailMethod("otp"); setPassword("") }}
+                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                       emailMethod === "otp"
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-muted-foreground hover:bg-muted/80"
                     }`}
                   >
-                    OTP
+                    Login with OTP
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setEmailMethod("password")
-                      setEmailPassword("")
-                    }}
-                    className={`flex-1 py-2 px-3 rounded-lg font-medium text-sm transition-all ${
+                    onClick={() => { setEmailMethod("password"); setPassword("") }}
+                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                       emailMethod === "password"
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-muted-foreground hover:bg-muted/80"
                     }`}
                   >
-                    Password
+                    Login with Password
                   </button>
                 </div>
 
                 {emailMethod === "otp" ? (
                   <form onSubmit={handleEmailSendOTP} className="flex flex-col gap-4">
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="email" className="text-base font-semibold">
+                      <Label htmlFor="email-otp" className="text-sm font-semibold">
                         Email Address
                       </Label>
                       <Input
-                        id="email"
+                        id="email-otp"
                         type="email"
                         autoComplete="email"
                         placeholder="you@example.com"
-                        maxLength="40"
                         value={email}
-                        onChange={handleEmailChange}
+                        onChange={(e) => setEmail(e.target.value.slice(0, 60))}
                         className="text-base"
                         autoFocus
                       />
-                      <p className="text-xs text-muted-foreground">
-                        {email.length}/40 characters
-                      </p>
                     </div>
-
                     <Button
                       type="submit"
                       disabled={!isEmailValid || emailLoading}
-                      className="w-full h-10 text-base font-semibold mt-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all"
+                      className="w-full h-10 text-base font-semibold"
                     >
                       {emailLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Sending OTP...
-                        </>
+                        <><Loader2 className="h-4 w-4 animate-spin mr-2" />Sending OTP...</>
                       ) : (
-                        "Send OTP"
+                        "Send OTP to Email"
                       )}
                     </Button>
                   </form>
                 ) : (
-                  <form onSubmit={handleEmailPasswordLogin} className="flex flex-col gap-4">
+                  <form onSubmit={handlePasswordLogin} className="flex flex-col gap-4">
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="email-pwd" className="text-base font-semibold">
+                      <Label htmlFor="email-pwd" className="text-sm font-semibold">
                         Email Address
                       </Label>
                       <Input
@@ -397,75 +313,57 @@ export function LoginFormEnhanced() {
                         type="email"
                         autoComplete="email"
                         placeholder="you@example.com"
-                        maxLength="40"
                         value={email}
-                        onChange={handleEmailChange}
+                        onChange={(e) => setEmail(e.target.value.slice(0, 60))}
                         className="text-base"
                         autoFocus
                       />
-                      <p className="text-xs text-muted-foreground">
-                        {email.length}/40 characters
-                      </p>
                     </div>
-
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="email-password" className="text-base font-semibold">
+                      <Label htmlFor="password" className="text-sm font-semibold">
                         Password
                       </Label>
                       <div className="relative">
                         <Input
-                          id="email-password"
-                          type={showEmailPassword ? "text" : "password"}
-                          placeholder="Enter 6-16 characters"
-                          maxLength="16"
-                          value={emailPassword}
-                          onChange={handleEmailPasswordChange}
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Enter your password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value.slice(0, 64))}
                           className="pr-10"
+                          autoComplete="current-password"
                         />
                         <button
                           type="button"
-                          onClick={() => setShowEmailPassword(!showEmailPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         >
-                          {showEmailPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {emailPassword.length}/16 characters • Min 6 required
-                      </p>
                     </div>
-
                     <Button
                       type="submit"
-                      disabled={!isEmailPasswordValid || emailPasswordLoading}
-                      className="w-full h-10 text-base font-semibold mt-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all"
+                      disabled={!isPasswordValid || passwordLoading}
+                      className="w-full h-10 text-base font-semibold"
                     >
-                      {emailPasswordLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Signing in...
-                        </>
+                      {passwordLoading ? (
+                        <><Loader2 className="h-4 w-4 animate-spin mr-2" />Signing in...</>
                       ) : (
                         "Sign in with Password"
                       )}
                     </Button>
                   </form>
                 )}
-              </>
+              </div>
             ) : (
               <OTPVerification
                 contact={email}
                 method="email"
                 onVerify={handleEmailVerifyOTP}
-                onBack={() => {
-                  setEmailStage("input")
-                  setEmail("")
-                }}
+                onBack={() => { setEmailStage("input"); setEmail("") }}
                 isLoading={emailLoading}
+                onResend={() => createAndSendEmailOTP(email)}
               />
             )}
           </TabsContent>
