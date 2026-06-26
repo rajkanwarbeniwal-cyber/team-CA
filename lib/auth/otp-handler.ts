@@ -1,156 +1,87 @@
-import { createClient } from "@/lib/supabase/client"
+"use server"
 
-// Store OTP codes in memory (in production, use a secure backend)
-const otpStore = new Map<string, { code: string; expiresAt: number }>()
+import { createClient as createServiceClient } from "@supabase/supabase-js"
+import { sendVerificationEmail } from "@/lib/auth/send-email"
 
-/**
- * Generate a random 6-digit OTP
- */
+// Service-role client — bypasses RLS, safe only in server code
+function getServiceClient() {
+  return createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
+
+/** Generate a random 6-digit OTP */
 export function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString()
 }
 
-/**
- * Store OTP temporarily for verification
- */
-export function storeOTP(identifier: string, otp: string): void {
-  const expiresAt = Date.now() + 10 * 60 * 1000 // 10 minutes
-  otpStore.set(identifier, { code: otp, expiresAt })
+/** Persist OTP to Supabase (survives serverless cold starts) */
+async function storeOTP(identifier: string, code: string): Promise<void> {
+  const supabase = getServiceClient()
+  // Invalidate any previous unused codes for this identifier
+  await supabase
+    .from("otp_codes")
+    .update({ used: true })
+    .eq("identifier", identifier)
+    .eq("used", false)
+
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
+  const { error } = await supabase
+    .from("otp_codes")
+    .insert({ identifier, code, expires_at: expiresAt })
+
+  if (error) throw new Error(`OTP store failed: ${error.message}`)
 }
 
-/**
- * Verify OTP against stored value
- */
-export function verifyOTP(identifier: string, otp: string): boolean {
-  const stored = otpStore.get(identifier)
-  if (!stored) return false
-  if (Date.now() > stored.expiresAt) {
-    otpStore.delete(identifier)
-    return false
-  }
-  if (stored.code !== otp) return false
-  otpStore.delete(identifier)
+/** Verify OTP from Supabase and mark it used */
+export async function verifyOTP(identifier: string, code: string): Promise<boolean> {
+  const supabase = getServiceClient()
+
+  const { data, error } = await supabase
+    .from("otp_codes")
+    .select("id, code, expires_at, used")
+    .eq("identifier", identifier)
+    .eq("used", false)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single()
+
+  if (error || !data) return false
+
+  const expired = new Date(data.expires_at) < new Date()
+  if (expired || data.used || data.code !== code) return false
+
+  // Mark as used
+  await supabase.from("otp_codes").update({ used: true }).eq("id", data.id)
   return true
 }
 
-/**
- * Send OTP via phone (simulated for development)
- * In production, integrate with Twilio or similar service
- */
-export async function sendPhoneOTP(phone: string): Promise<string> {
-  try {
-    const otp = generateOTP()
-    storeOTP(`phone:${phone}`, otp)
+/** Send OTP to a phone number (logs to console — integrate Twilio for production) */
+export async function sendPhoneOTP(phone: string): Promise<void> {
+  const otp = generateOTP()
+  await storeOTP(`phone:${phone}`, otp)
+  // TODO: replace with Twilio API call
+  console.log(`[dev] OTP for ${phone}: ${otp}`)
+}
 
-    // Log for development (in real app, send via Twilio)
-    console.log(`[v0] OTP for ${phone}: ${otp}`)
+/** Send OTP email via Resend and persist to Supabase */
+export async function sendEmailOTP(email: string): Promise<void> {
+  const otp = generateOTP()
+  await storeOTP(`email:${email}`, otp)
 
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    return otp
-  } catch (error) {
-    console.error("[v0] Error sending phone OTP:", error)
-    throw error
+  const result = await sendVerificationEmail(email, otp)
+  if (!result.success) {
+    throw new Error(result.error ?? "Failed to send OTP email")
   }
 }
 
-/**
- * Send OTP via email using Resend API (server-side)
- */
-export async function sendEmailOTP(email: string): Promise<string> {
-  try {
-    const otp = generateOTP()
-    storeOTP(`email:${email}`, otp)
-
-    // Try to send via server action (Resend)
-    try {
-      const { sendOTPEmailAction } = await import("@/lib/auth/otp-server-actions")
-      const result = await sendOTPEmailAction(email, otp)
-      
-      if (result.success) {
-        console.log(`[v0] OTP email sent successfully to ${email}`)
-      } else {
-        console.warn(`[v0] Failed to send email via Resend: ${result.error}`)
-        console.log(`[v0] OTP for ${email}: ${otp} (fallback to console)`)
-      }
-    } catch (error) {
-      // If Resend not available or error occurs, log to console for development
-      console.warn("[v0] Could not send email via Resend, using console fallback")
-      console.log(`[v0] OTP for ${email}: ${otp}`)
-    }
-
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    return otp
-  } catch (error) {
-    console.error("[v0] Error sending email OTP:", error)
-    throw error
-  }
-}
-
-/**
- * Verify phone OTP
- */
-export function verifyPhoneOTP(phone: string, otp: string): boolean {
+/** Verify a phone OTP */
+export async function verifyPhoneOTP(phone: string, otp: string): Promise<boolean> {
   return verifyOTP(`phone:${phone}`, otp)
 }
 
-/**
- * Verify email OTP
- */
-export function verifyEmailOTP(email: string, otp: string): boolean {
+/** Verify an email OTP */
+export async function verifyEmailOTP(email: string, otp: string): Promise<boolean> {
   return verifyOTP(`email:${email}`, otp)
-}
-
-/**
- * Create or get user after OTP verification
- */
-export async function createOrGetUserAfterOTP(
-  contact: string,
-  method: "phone" | "email"
-): Promise<{ userId: string; isNewUser: boolean }> {
-  const supabase = createClient()
-
-  if (method === "phone") {
-    // For phone: use phone as email (phone@taksha.local)
-    const pseudoEmail = `${contact}@phone.taksha.local`
-
-    // Try to sign up (will fail if already exists)
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email: pseudoEmail,
-      password: generateOTP(), // Generate random password
-      phone: contact,
-    })
-
-    if (signUpError && !signUpError.message.includes("already")) {
-      throw signUpError
-    }
-
-    // Sign in to get current user
-    const { data } = await supabase.auth.getUser()
-    if (data.user) {
-      return { userId: data.user.id, isNewUser: !signUpError || signUpError.message.includes("already") }
-    }
-
-    throw new Error("Failed to authenticate user")
-  } else {
-    // For email: use email directly
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email: contact,
-      password: generateOTP(), // Generate random password
-    })
-
-    if (signUpError && !signUpError.message.includes("already")) {
-      throw signUpError
-    }
-
-    const { data } = await supabase.auth.getUser()
-    if (data.user) {
-      return { userId: data.user.id, isNewUser: !signUpError || signUpError.message.includes("already") }
-    }
-
-    throw new Error("Failed to authenticate user")
-  }
 }

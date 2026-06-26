@@ -3,45 +3,46 @@
 import { Resend } from "resend"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
+const FROM = "noreply@taksha.education"
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://taksha.education"
 
 export async function sendVerificationEmail(email: string, otp: string) {
   try {
     const result = await resend.emails.send({
-      from: "noreply@taksha.app",
+      from: FROM,
       to: email,
-      subject: "Your Taksha Verification Code",
+      subject: `${otp} — Aapka Taksha verification code`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #3b82f6; margin: 0;">Taksha</h1>
-          </div>
-          
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; padding: 30px; text-align: center; color: white;">
-            <h2 style="margin: 0 0 20px 0;">Verify Your Email</h2>
-            <p style="margin: 0 0 20px 0; font-size: 16px;">Your verification code is:</p>
-            <div style="background: rgba(255,255,255,0.2); border-radius: 8px; padding: 15px; margin: 20px 0;">
-              <h1 style="letter-spacing: 5px; font-size: 36px; margin: 0; font-family: 'Courier New', monospace;">${otp}</h1>
-            </div>
-            <p style="margin: 20px 0 0 0; font-size: 14px;">This code will expire in 10 minutes.</p>
+        <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#fff;">
+          <div style="text-align:center;margin-bottom:28px;">
+            <h1 style="margin:0;font-size:26px;color:#1e293b;letter-spacing:-0.5px;">Taksha</h1>
+            <p style="margin:4px 0 0;font-size:13px;color:#64748b;">Exam Preparation Platform</p>
           </div>
 
-          <div style="margin-top: 30px; text-align: center; color: #666; font-size: 12px;">
-            <p style="margin: 10px 0;">If you didn't request this code, please ignore this email.</p>
-            <p style="margin: 10px 0; color: #999;">© 2025 Taksha. All rights reserved.</p>
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:32px;text-align:center;">
+            <p style="margin:0 0 8px;font-size:15px;color:#475569;">Aapka verification code hai</p>
+            <div style="background:#fff;border:2px dashed #3b82f6;border-radius:8px;padding:16px 24px;display:inline-block;margin:12px 0;">
+              <span style="font-size:40px;font-weight:700;letter-spacing:10px;color:#1e293b;font-family:'Courier New',monospace;">${otp}</span>
+            </div>
+            <p style="margin:12px 0 0;font-size:13px;color:#94a3b8;">Yeh code <strong>10 minutes</strong> mein expire ho jaayega.</p>
           </div>
+
+          <p style="margin:20px 0 0;font-size:13px;color:#94a3b8;text-align:center;">
+            Agar aapne yeh request nahi ki, toh is email ko ignore kar dijiye.<br/>
+            &copy; 2025 Taksha &mdash; <a href="${APP_URL}" style="color:#3b82f6;text-decoration:none;">taksha.education</a>
+          </p>
         </div>
       `,
     })
 
     if (result.error) {
-      console.error("[v0] Resend error:", result.error)
+      console.error("[auth] Resend error:", result.error)
       return { success: false, error: result.error.message }
     }
 
-    console.log("[v0] Email sent successfully to:", email)
     return { success: true, messageId: result.data?.id }
-  } catch (error) {
-    console.error("[v0] Error sending email:", error)
+  } catch (error: any) {
+    console.error("[auth] sendVerificationEmail failed:", error?.message ?? error)
     return { success: false, error: "Failed to send email" }
   }
 }
@@ -49,54 +50,55 @@ export async function sendVerificationEmail(email: string, otp: string) {
 export async function sendConfirmationEmail(email: string, userName: string) {
   try {
     const result = await resend.emails.send({
-      from: "noreply@taksha.app",
+      from: FROM,
       to: email,
-      subject: "Welcome to Taksha - Your Account is Confirmed",
+      subject: "Taksha mein aapka swagat hai!",
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #3b82f6; margin: 0;">Taksha</h1>
+        <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#fff;">
+          <div style="text-align:center;margin-bottom:28px;">
+            <h1 style="margin:0;font-size:26px;color:#1e293b;">Taksha</h1>
+            <p style="margin:4px 0 0;font-size:13px;color:#64748b;">Exam Preparation Platform</p>
           </div>
-          
-          <h2 style="color: #333; margin-top: 0;">Welcome, ${userName}! 🎉</h2>
-          
-          <p style="color: #666; line-height: 1.6;">
-            Your account has been successfully created. You're all set to start your exam preparation journey.
+
+          <h2 style="color:#1e293b;margin:0 0 12px;">Swagat hai, ${userName}!</h2>
+          <p style="color:#475569;line-height:1.7;margin:0 0 20px;">
+            Aapka account successfully ban gaya hai. Ab aap apni exam preparation suru kar sakte hain.
           </p>
 
-          <div style="background: #f3f4f6; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <h3 style="margin-top: 0; color: #333;">What's Next?</h3>
-            <ul style="color: #666; line-height: 1.8;">
-              <li>Complete your profile to get personalized recommendations</li>
-              <li>Select your exam goal and target year</li>
-              <li>Map your subject strengths to optimize your study plan</li>
-              <li>Start practicing with thousands of exam questions</li>
+          <div style="background:#f0f9ff;border-left:4px solid #3b82f6;border-radius:4px;padding:16px 20px;margin:0 0 24px;">
+            <p style="margin:0 0 8px;font-weight:600;color:#1e293b;">Agle steps:</p>
+            <ul style="margin:0;padding-left:20px;color:#475569;line-height:1.9;">
+              <li>Profile complete karein aur exam goal chunein</li>
+              <li>Subject strengths map karein</li>
+              <li>AI-generated personalized tests practice karein</li>
+              <li>Daily quiz se streak banayein</li>
             </ul>
           </div>
 
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://taksha.app"}/profile" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
-              Complete Your Profile
+          <div style="text-align:center;margin:0 0 24px;">
+            <a href="${APP_URL}/profile"
+               style="background:#3b82f6;color:#fff;padding:12px 32px;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;display:inline-block;">
+              Profile Complete Karein
             </a>
           </div>
 
-          <div style="margin-top: 30px; text-align: center; color: #999; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
-            <p style="margin: 10px 0;">If you have any questions, feel free to reach out to our support team.</p>
-            <p style="margin: 10px 0;">© 2025 Taksha. All rights reserved.</p>
-          </div>
+          <p style="font-size:13px;color:#94a3b8;text-align:center;margin:0;">
+            Koi sawaal ho toh email karein:
+            <a href="mailto:support@taksha.education" style="color:#3b82f6;text-decoration:none;">support@taksha.education</a><br/>
+            &copy; 2025 Taksha &mdash; <a href="${APP_URL}" style="color:#3b82f6;text-decoration:none;">taksha.education</a>
+          </p>
         </div>
       `,
     })
 
     if (result.error) {
-      console.error("[v0] Resend error:", result.error)
+      console.error("[auth] Resend error:", result.error)
       return { success: false, error: result.error.message }
     }
 
-    console.log("[v0] Confirmation email sent to:", email)
     return { success: true, messageId: result.data?.id }
-  } catch (error) {
-    console.error("[v0] Error sending confirmation email:", error)
+  } catch (error: any) {
+    console.error("[auth] sendConfirmationEmail failed:", error?.message ?? error)
     return { success: false, error: "Failed to send confirmation email" }
   }
 }
