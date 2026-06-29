@@ -1,10 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
-    ignoreBuildErrors: true,
+    // Enforce strict type checking; fix type errors before building
+    ignoreBuildErrors: false,
   },
   images: {
-    unoptimized: true,
+    // Use Next.js Image optimization for Taksha PNGs
+    formats: ['image/avif', 'image/webp'],
+  },
+  // Enable React Compiler for production optimization
+  experimental: {
+    reactCompiler: true,
   },
 }
 

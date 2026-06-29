@@ -1,6 +1,6 @@
 "use client"
 
-import { Bookmark, Eye, Lock, RotateCcw } from "lucide-react"
+import { Bookmark, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -17,11 +17,6 @@ export function QuestionCard({
   onSelect,
   onClear,
   onToggleBookmark,
-  // progressive unlock
-  unlocked,
-  revealedCorrect,
-  revealedExplanation,
-  unlockProgress,
 }: {
   question: ExamQuestion
   index: number
@@ -31,10 +26,6 @@ export function QuestionCard({
   onSelect: (opt: OptionKey) => void
   onClear: () => void
   onToggleBookmark: () => void
-  unlocked: boolean
-  revealedCorrect?: string
-  revealedExplanation?: string | null
-  unlockProgress: number
 }) {
   const options: { key: OptionKey; text: string }[] = [
     { key: "A", text: question.option_a },
@@ -42,8 +33,6 @@ export function QuestionCard({
     { key: "C", text: question.option_c },
     { key: "D", text: question.option_d },
   ]
-
-  const showAnswerKey = unlocked && !selected && revealedCorrect
 
   return (
     <div className="flex flex-col gap-5">
@@ -79,7 +68,6 @@ export function QuestionCard({
       <div className="flex flex-col gap-3" role="radiogroup" aria-label={`Options for question ${index + 1}`}>
         {options.map((opt) => {
           const isSelected = selected === opt.key
-          const isRevealedCorrect = showAnswerKey && revealedCorrect === opt.key
           return (
             <button
               key={opt.key}
@@ -91,9 +79,7 @@ export function QuestionCard({
                 "flex items-start gap-3 rounded-lg border p-4 text-left transition-colors",
                 isSelected
                   ? "border-primary bg-primary/5 ring-1 ring-primary"
-                  : isRevealedCorrect
-                    ? "border-success bg-success/10"
-                    : "border-border bg-card hover:border-primary/40 hover:bg-accent/40",
+                  : "border-border bg-card hover:border-primary/40 hover:bg-accent/40",
               )}
             >
               <span
@@ -101,9 +87,7 @@ export function QuestionCard({
                   "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border text-sm font-semibold",
                   isSelected
                     ? "border-primary bg-primary text-primary-foreground"
-                    : isRevealedCorrect
-                      ? "border-success bg-success text-success-foreground"
-                      : "border-border bg-muted text-muted-foreground",
+                    : "border-border bg-muted text-muted-foreground",
                 )}
               >
                 {opt.key}
@@ -113,25 +97,6 @@ export function QuestionCard({
           )
         })}
       </div>
-
-      {showAnswerKey && (
-        <div className="rounded-lg border border-success/30 bg-success/5 p-4 text-sm">
-          <div className="flex items-center gap-2 font-medium text-success">
-            <Eye className="h-4 w-4" /> Answer key unlocked
-          </div>
-          <p className="mt-1 text-muted-foreground">
-            Correct answer: <span className="font-semibold text-foreground">Option {revealedCorrect}</span>
-            {revealedExplanation ? ` — ${revealedExplanation}` : ""}
-          </p>
-        </div>
-      )}
-
-      {!unlocked && !selected && OPTION_KEYS.length > 0 && (
-        <div className="flex items-center gap-2 rounded-lg border border-dashed border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-          <Lock className="h-3.5 w-3.5" />
-          Answer keys for skipped questions unlock after you complete 50% of the test ({unlockProgress}% done).
-        </div>
-      )}
 
       {selected && (
         <Button type="button" variant="ghost" size="sm" className="self-start" onClick={onClear}>

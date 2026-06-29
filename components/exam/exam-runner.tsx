@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { ChevronLeft, ChevronRight, Loader2, Send } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useExamStore } from "@/lib/exam-store"
+import { useServerTimer } from "@/hooks/use-server-timer"
 import type { ExamQuestion, MockTest, OptionKey } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -27,10 +28,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
 
-type RevealMap = Record<string, { correct_option: string; explanation: string | null }>
-
-const UNLOCK_THRESHOLD = 50
-
 export function ExamRunner({ test }: { test: MockTest }) {
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
@@ -39,8 +36,15 @@ export function ExamRunner({ test }: { test: MockTest }) {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [now, setNow] = useState(Date.now())
-  const [reveal, setReveal] = useState<RevealMap>({})
   const initRef = useRef(false)
+
+  // Server-authoritative timer validation
+  const serverTimer = useServerTimer({
+    attemptId: store.attemptId || "",
+    timerMode: store.timerMode || "total",
+    totalDurationMinutes: store.durationMinutes || 0,
+    enabled: !!store.attemptId && !store.finished,
+  })
 
   // ---- Initialize or resume the exam session ----
   useEffect(() => {
@@ -103,34 +107,20 @@ export function ExamRunner({ test }: { test: MockTest }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ---- Clock tick ----
+  // ---- Clock tick (display only; server is source of truth) ----
   useEffect(() => {
-    let lastVisibleTime = Date.now()
     const id = setInterval(() => setNow(Date.now()), 250)
-    
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        lastVisibleTime = Date.now()
-      } else {
-        // Tab became visible: adjust deadlines by the hidden duration
-        const hiddenDuration = Date.now() - lastVisibleTime
-        if (store.deadline) {
-          store.perQuestionDeadline = store.perQuestionDeadline 
-            ? store.perQuestionDeadline + hiddenDuration 
-            : store.perQuestionDeadline
-        }
-        if (store.deadline) {
-          store.deadline += hiddenDuration
-        }
-      }
+    return () => clearInterval(id)
+  }, [])
+
+  // ---- Auto-submit if server says time is expired ----
+  useEffect(() => {
+    if (serverTimer.isExpired && !submitting && store.attemptId) {
+      toast.info("Time is up! Auto-submitting your test.")
+      handleSubmit()
     }
-    
-    document.addEventListener("visibilitychange", handleVisibilityChange)
-    return () => {
-      clearInterval(id)
-      document.removeEventListener("visibilitychange", handleVisibilityChange)
-    }
-  }, [store])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverTimer.isExpired])
 
   const questions = store.questions
   const total = questions.length
@@ -138,27 +128,18 @@ export function ExamRunner({ test }: { test: MockTest }) {
   const question = questions[current]
   const answered = store.answeredCount()
   const progress = total > 0 ? Math.round((answered / total) * 100) : 0
-  const unlocked = progress >= UNLOCK_THRESHOLD
-
-  // ---- Progressive unlock: fetch answer keys once 50% reached ----
-  useEffect(() => {
-    if (!unlocked || !store.testId) return
-    if (Object.keys(reveal).length > 0) return
-    supabase.rpc("reveal_answers", { p_test_id: store.testId }).then(({ data }) => {
-      if (!data) return
-      const map: RevealMap = {}
-      for (const row of data as { id: string; correct_option: string; explanation: string | null }[]) {
-        map[row.id] = { correct_option: row.correct_option, explanation: row.explanation }
-      }
-      setReveal(map)
-      toast.success("Answer keys for skipped questions are now unlocked.")
-    })
-  }, [unlocked, store.testId, reveal, supabase])
 
   const handleSubmit = useCallback(async () => {
     if (!store.attemptId) return
     setSubmitting(true)
-    const elapsed = store.startedAt ? Math.round((Date.now() - store.startedAt) / 1000) : 0
+
+    // Sync with server before submission to ensure time hasn't expired
+    try {
+      await serverTimer.syncWithServer()
+    } catch (error) {
+      console.error("[v0] Server timer sync failed before submit:", error)
+    }
+
     const answersPayload = questions.map((q) => ({
       question_id: q.id,
       selected_option: store.answers[q.id]?.selected ?? null,
@@ -168,7 +149,7 @@ export function ExamRunner({ test }: { test: MockTest }) {
     const { error } = await supabase.rpc("submit_attempt", {
       p_attempt_id: store.attemptId,
       p_answers: answersPayload,
-      p_time_taken: elapsed,
+      p_time_taken: undefined, // Server will calculate from started_at
     })
 
     if (error) {
@@ -181,7 +162,7 @@ export function ExamRunner({ test }: { test: MockTest }) {
     store.finishExam()
     store.reset()
     router.push(`/results/${attemptId}`)
-  }, [store, questions, supabase, router])
+  }, [store, questions, supabase, router, serverTimer])
 
   // ---- Timer expiry handlers ----
   const handleTotalExpire = useCallback(() => {
@@ -258,10 +239,6 @@ export function ExamRunner({ test }: { test: MockTest }) {
               onSelect={(opt: OptionKey) => store.selectOption(question.id, opt)}
               onClear={() => store.clearOption(question.id)}
               onToggleBookmark={() => store.toggleBookmark(question.id)}
-              unlocked={unlocked}
-              revealedCorrect={reveal[question.id]?.correct_option}
-              revealedExplanation={reveal[question.id]?.explanation}
-              unlockProgress={progress}
             />
           </div>
 
@@ -286,8 +263,8 @@ export function ExamRunner({ test }: { test: MockTest }) {
           <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-sm font-semibold">Question Palette</h3>
-              <Badge variant={unlocked ? "default" : "secondary"} className="text-[10px]">
-                {unlocked ? "Keys unlocked" : `${progress}% done`}
+              <Badge variant="secondary" className="text-[10px]">
+                {progress}% done
               </Badge>
             </div>
             <QuestionPalette

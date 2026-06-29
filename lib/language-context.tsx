@@ -97,17 +97,19 @@ const translations: Record<Language, Record<string, string>> = {
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>("en")
-  const [mounted, setMounted] = useState(false)
   const supabase = createClient()
 
-  // Load language from localStorage and profile on mount
+  // Hydrate language asynchronously without blocking render
   useEffect(() => {
     async function loadLanguage() {
       const stored = localStorage.getItem("language") as Language | null
-      if (stored) {
+      if (stored && stored !== "en") {
         setLanguageState(stored)
-      } else {
-        // Try to load from profile
+        return
+      }
+
+      // Try to load from profile for authenticated users
+      try {
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
           const { data: profile } = await supabase
@@ -117,13 +119,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
             .single()
 
           const profileLang = (profile?.metadata as any)?.language as Language | undefined
-          if (profileLang) {
+          if (profileLang && profileLang !== "en") {
             setLanguageState(profileLang)
             localStorage.setItem("language", profileLang)
           }
         }
+      } catch (error) {
+        console.error("[v0] Failed to load language from profile:", error)
       }
-      setMounted(true)
     }
 
     loadLanguage()
@@ -133,13 +136,27 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     setLanguageState(lang)
     localStorage.setItem("language", lang)
 
-    // Persist to profile if user is authenticated
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      await supabase
-        .from("profiles")
-        .update({ metadata: { language: lang } })
-        .eq("id", user.id)
+    // Merge with existing metadata when updating profile
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        // Read existing metadata first
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("metadata")
+          .eq("id", user.id)
+          .single()
+
+        const existingMetadata = (profile?.metadata as any) || {}
+        const updatedMetadata = { ...existingMetadata, language: lang }
+
+        await supabase
+          .from("profiles")
+          .update({ metadata: updatedMetadata })
+          .eq("id", user.id)
+      }
+    } catch (error) {
+      console.error("[v0] Failed to persist language to profile:", error)
     }
   }
 
@@ -147,8 +164,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return translations[language][key] ?? key
   }
 
-  if (!mounted) return null
-
+  // Render immediately with default language; hydrate when loaded
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>
       {children}

@@ -147,10 +147,6 @@ export function BookmarksView() {
                 onSelect={() => {}}
                 onClear={() => {}}
                 onToggleBookmark={() => handleRemoveBookmark(bookmark.id)}
-                unlocked={true}
-                revealedCorrect={undefined}
-                revealedExplanation={undefined}
-                unlockProgress={100}
               />
             </CardContent>
           </Card>

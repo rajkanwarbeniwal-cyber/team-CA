@@ -1,28 +1,14 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { revalidateTag } from "next/cache"
+import { requireAdmin } from "@/lib/auth-guard"
+import { encrypt } from "@/lib/crypto"
 
 export async function addApiKey(provider: string, keyName: string, apiKey: string) {
-  const supabase = await createClient()
+  const { supabase, user } = await requireAdmin()
 
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error("Not authenticated")
-
-  // Check if user is admin
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (profile?.role !== "admin") {
-    throw new Error("Only admins can manage API keys")
-  }
-
-  // Simple encryption (in production, use proper encryption)
-  const encrypted = Buffer.from(apiKey).toString("base64")
+  // Real AES-256-GCM encryption
+  const encrypted = encrypt(apiKey)
 
   // Insert API key
   const { error } = await supabase
@@ -41,24 +27,9 @@ export async function addApiKey(provider: string, keyName: string, apiKey: strin
 }
 
 export async function updateApiKey(id: number, apiKey: string) {
-  const supabase = await createClient()
+  const { supabase } = await requireAdmin()
 
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error("Not authenticated")
-
-  // Check if user is admin
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (profile?.role !== "admin") {
-    throw new Error("Only admins can manage API keys")
-  }
-
-  const encrypted = Buffer.from(apiKey).toString("base64")
+  const encrypted = encrypt(apiKey)
 
   const { error } = await supabase
     .from("api_keys")
@@ -72,22 +43,7 @@ export async function updateApiKey(id: number, apiKey: string) {
 }
 
 export async function deleteApiKey(id: number) {
-  const supabase = await createClient()
-
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error("Not authenticated")
-
-  // Check if user is admin
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (profile?.role !== "admin") {
-    throw new Error("Only admins can manage API keys")
-  }
+  const { supabase } = await requireAdmin()
 
   const { error } = await supabase
     .from("api_keys")
@@ -100,14 +56,14 @@ export async function deleteApiKey(id: number) {
   return { success: true }
 }
 
+/**
+ * Retrieve and decrypt an API key. Only server code can call this function.
+ * Never return the raw key to client components.
+ */
 export async function getApiKey(provider: string, keyName: string) {
-  const supabase = await createClient()
+  const { supabase } = await requireAdmin()
 
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error("Not authenticated")
-
-  // Get the API key (for internal use only)
+  // Get the API key (for internal server use only)
   const { data } = await supabase
     .from("api_keys")
     .select("encrypted_value")
@@ -118,28 +74,20 @@ export async function getApiKey(provider: string, keyName: string) {
 
   if (!data) return null
 
-  // Decrypt
-  const decrypted = Buffer.from(data.encrypted_value, "base64").toString()
+  // Decrypt using AES-256-GCM
+  let decrypted: string
+  try {
+    const { decrypt } = await import("@/lib/crypto")
+    decrypted = decrypt(data.encrypted_value)
+  } catch (error) {
+    throw new Error(`Failed to decrypt API key: ${error instanceof Error ? error.message : "Unknown error"}`)
+  }
+
   return decrypted
 }
 
 export async function listApiKeys() {
-  const supabase = await createClient()
-
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error("Not authenticated")
-
-  // Check if user is admin
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (profile?.role !== "admin") {
-    throw new Error("Only admins can access API keys")
-  }
+  const { supabase } = await requireAdmin()
 
   // Get all API keys (without exposing the actual values)
   const { data: keys } = await supabase

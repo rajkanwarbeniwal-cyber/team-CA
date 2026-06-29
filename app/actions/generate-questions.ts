@@ -1,7 +1,16 @@
 "use server"
 
+import { z } from "zod"
 import { generateMockTestQuestions, type GeneratedQuestion } from "@/lib/ai-question-generator"
-import { createClient } from "@/lib/supabase/server"
+import { requireAdmin } from "@/lib/auth-guard"
+
+const GenerateQuestionsSchema = z.object({
+  mockTestId: z.string().uuid("Invalid mock test ID"),
+  topic: z.string().min(1, "Topic is required").max(100),
+  difficulty: z.enum(["easy", "medium", "hard"]),
+  questionCount: z.number().int().min(1, "At least 1 question required").max(50, "Maximum 50 questions per request"),
+  examType: z.string().min(1).max(50),
+})
 
 export interface GenerateQuestionsRequest {
   mockTestId: string
@@ -23,39 +32,24 @@ export async function generateQuestionsAction(
   req: GenerateQuestionsRequest,
 ): Promise<GenerateQuestionsResponse> {
   try {
-    // Check admin role
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    // Validate input with Zod schema
+    const validated = GenerateQuestionsSchema.parse(req)
 
-    if (!user) {
-      return { success: false, message: "Not authenticated", error: "User not found" }
-    }
-
-    // Verify admin role
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("user_id", user.id)
-      .single()
-
-    if (profile?.role !== "admin") {
-      return { success: false, message: "Not authorized", error: "Only admins can generate questions" }
-    }
+    // Check admin role using auth-guard helper
+    const { supabase } = await requireAdmin()
 
     // Generate questions using AI
-    console.log("[v0] Generating questions for:", req.topic)
+    console.log("[v0] Generating questions for:", validated.topic)
     const generated = await generateMockTestQuestions(
-      req.topic,
-      req.difficulty,
-      req.questionCount,
-      req.examType,
+      validated.topic,
+      validated.difficulty,
+      validated.questionCount,
+      validated.examType,
     )
 
     // Insert questions into database
     const questionsToInsert = generated.questions.map((q: GeneratedQuestion, idx: number) => ({
-      mock_test_id: req.mockTestId,
+      mock_test_id: validated.mockTestId,
       question_text: q.question_text,
       options: {
         A: q.option_a,
@@ -90,6 +84,26 @@ export async function generateQuestionsAction(
     }
   } catch (error) {
     console.error("[v0] Generation action error:", error)
+    
+    // Handle validation errors
+    if (error instanceof z.ZodError) {
+      const zodError = error as unknown as { issues?: z.ZodIssue[] }
+      return {
+        success: false,
+        message: "Invalid request parameters",
+        error: (zodError.issues || []).map((e: z.ZodIssue) => `${e.path.join(".")}: ${e.message}`).join("; "),
+      }
+    }
+
+    // Handle auth errors
+    if (error instanceof Error && error.message.includes("admin")) {
+      return {
+        success: false,
+        message: "Not authorized",
+        error: error.message,
+      }
+    }
+
     return {
       success: false,
       message: "Error generating questions",

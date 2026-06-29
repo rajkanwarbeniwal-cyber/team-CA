@@ -45,7 +45,7 @@ Generate exactly ${questionCount} questions in the specified JSON format.
 
   try {
     const result = await generateObject({
-      model: openai("gpt-4-mini"),
+      model: openai("gpt-4o-mini"),
       schema: GeneratedQuestionsSchema,
       prompt,
       temperature: 0.7,
@@ -75,7 +75,7 @@ Provide a 2-3 sentence explanation that helps students understand the concept.
 
   try {
     const result = await generateObject({
-      model: openai("gpt-4-mini"),
+      model: openai("gpt-4o-mini"),
       schema: z.object({
         explanation: z.string(),
       }),
@@ -108,7 +108,7 @@ Return a JSON object with:
 
   try {
     const result = await generateObject({
-      model: openai("gpt-4-mini"),
+      model: openai("gpt-4o-mini"),
       schema: z.object({
         topics: z.array(z.string()),
         distribution: z.record(z.string(), z.number()),
