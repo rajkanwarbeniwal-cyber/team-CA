@@ -11,7 +11,7 @@ import { BrandLogo } from "@/components/brand-logo"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -95,6 +95,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="space-y-3">
           <Link href="/profile" className="flex items-center gap-3 rounded-md border border-sidebar-border p-3 transition-colors hover:bg-sidebar-accent">
             <Avatar className="size-9">
+              <AvatarImage src={profile?.avatar_url ?? undefined} alt={profile?.full_name ?? "Profile photo"} />
               <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">{initials}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">

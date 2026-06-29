@@ -7,7 +7,12 @@ export type AttemptStatus = "in_progress" | "completed"
 export interface Profile {
   id: string
   full_name: string | null
+  avatar_url: string | null
   role: Role
+  exam_goal: string | null
+  target_year: number | null
+  attempt_number: string | null
+  target_state: string | null
   created_at: string
 }
 
