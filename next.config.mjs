@@ -8,10 +8,7 @@ const nextConfig = {
     // Use Next.js Image optimization for Taksha PNGs
     formats: ['image/avif', 'image/webp'],
   },
-  // Enable React Compiler for production optimization
-  experimental: {
-    reactCompiler: true,
-  },
+
 }
 
 export default nextConfig
