@@ -10,6 +10,7 @@ import type {
   LeaderboardRow,
   Profile,
 } from "@/lib/types"
+import type { AiMockTest } from "@/app/actions/generate-ai-test"
 
 export function useProfile() {
   const supabase = createClient()
@@ -98,6 +99,27 @@ export function useMyAttempts() {
         .order("completed_at", { ascending: false })
       if (error) throw error
       return data as (TestAttempt & { mock_tests: MockTest | null })[]
+    },
+  })
+}
+
+export function useMyAiTests() {
+  const supabase = createClient()
+  return useQuery({
+    queryKey: ["my-ai-tests"],
+    queryFn: async (): Promise<AiMockTest[]> => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) return []
+      const { data, error } = await supabase
+        .from("ai_mock_tests")
+        .select("id, title, exam_goal, total_questions, duration_minutes, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20)
+      if (error) throw error
+      return (data ?? []) as AiMockTest[]
     },
   })
 }

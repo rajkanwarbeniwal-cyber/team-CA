@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { Target, TrophyIcon, ListChecks, Flame, ArrowRight, BookOpenCheck } from "lucide-react"
-import { useMyAttempts, useProfile } from "@/lib/queries"
+import { Target, TrophyIcon, ListChecks, Flame, ArrowRight, BookOpenCheck, BrainCircuit, Sparkles } from "lucide-react"
+import { useMyAttempts, useMyAiTests, useProfile } from "@/lib/queries"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,7 @@ import { ScoreTrendChart } from "@/components/analytics/score-trend-chart"
 export function DashboardView() {
   const { data: profile } = useProfile()
   const { data: attempts, isLoading } = useMyAttempts()
+  const { data: aiTests } = useMyAiTests()
 
   const total = attempts?.length ?? 0
   const avg = total ? Math.round(attempts!.reduce((s, a) => s + Number(a.percentage), 0) / total) : 0
@@ -82,6 +83,46 @@ export function DashboardView() {
             />
           </>
         )}
+      </div>
+
+      {/* AI Personalized Test Card */}
+      <div className="mt-6">
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="flex flex-col items-start gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <BrainCircuit className="size-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  AI Test built for you
+                  {profile?.exam_goal && (
+                    <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                      <Sparkles className="size-3" />
+                      {profile.exam_goal}
+                    </span>
+                  )}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {profile?.exam_goal
+                    ? `Generate a personalized ${profile.exam_goal} mock test based on your profile, difficulty, and subject syllabus.`
+                    : "Set your target exam in your profile and we will generate a custom mock test for you."}
+                  {(aiTests?.length ?? 0) > 0 && (
+                    <span className="ml-1 text-muted-foreground">
+                      · {aiTests!.length} test{aiTests!.length !== 1 ? "s" : ""} generated so far.
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+            <Button asChild size="sm" className="shrink-0">
+              <Link href="/ai-test">
+                {profile?.exam_goal ? "Generate test" : "Set up profile"}
+                <ArrowRight className="ml-1.5 size-3.5" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
