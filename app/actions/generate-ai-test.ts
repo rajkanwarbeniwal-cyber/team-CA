@@ -166,7 +166,7 @@ export async function generateAiTest(): Promise<GenerateAiTestResult> {
       return { success: false, error: "Failed to save questions. Please try again." }
     }
 
-    revalidateTag(`ai-tests-${user.id}`)
+    revalidateTag(`ai-tests-${user.id}`, "max")
 
     return {
       success: true,
