@@ -3,6 +3,7 @@ import { Suspense } from "react"
 import { BrandLogo } from "@/components/brand-logo"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LoginForm } from "@/components/auth/login-form"
+import { MotivationalQuote } from "@/components/auth/motivational-quote"
 
 export default function LoginPage() {
   return (
@@ -28,6 +29,9 @@ export default function LoginPage() {
               Create one
             </Link>
           </p>
+          <div className="mt-6">
+            <MotivationalQuote />
+          </div>
         </div>
       </div>
     </main>

@@ -24,6 +24,8 @@ import { useAdminQuestions, useSaveQuestion, useDeleteQuestion } from "@/lib/adm
 import { OPTION_KEYS, type MockTest, type OptionKey, type Question } from "@/lib/types"
 import { DeleteButton } from "@/components/admin/delete-button"
 import { AIQuestionGenerator } from "@/components/admin/ai-question-generator"
+import { SubjectMapper } from "@/components/admin/subject-mapper"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export function QuestionManager({ test, onBack }: { test: MockTest; onBack: () => void }) {
   const { data: questions, isLoading } = useAdminQuestions(test.id)
@@ -51,19 +53,35 @@ export function QuestionManager({ test, onBack }: { test: MockTest; onBack: () =
                 🤖 AI Generate
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Generate Questions with AI</DialogTitle>
                 <DialogDescription>
                   Use artificial intelligence to automatically create questions for this test
                 </DialogDescription>
               </DialogHeader>
-              <AIQuestionGenerator
-                mockTestId={test.id}
-                onSuccess={() => {
-                  window.location.reload()
-                }}
-              />
+              <Tabs defaultValue="single" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="single">Single Topic</TabsTrigger>
+                  <TabsTrigger value="mapper">Subject Mapper</TabsTrigger>
+                </TabsList>
+                <TabsContent value="single" className="mt-4">
+                  <AIQuestionGenerator
+                    mockTestId={test.id}
+                    onSuccess={() => {
+                      window.location.reload()
+                    }}
+                  />
+                </TabsContent>
+                <TabsContent value="mapper" className="mt-4">
+                  <SubjectMapper
+                    mockTestId={test.id}
+                    onSuccess={() => {
+                      window.location.reload()
+                    }}
+                  />
+                </TabsContent>
+              </Tabs>
             </DialogContent>
           </Dialog>
 

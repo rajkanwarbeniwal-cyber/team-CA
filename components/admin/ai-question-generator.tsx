@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { generateQuestionsAction } from "@/app/actions/generate-questions"
 import { toast } from "sonner"
 
@@ -153,6 +154,34 @@ export function AIQuestionGenerator({ mockTestId, onSuccess }: AIGeneratorProps)
           </Button>
         </div>
       </div>
+
+      {/* Loading skeletons simulating incoming AI questions */}
+      {isLoading && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="glass rounded-2xl border-0 p-6 space-y-4"
+          aria-busy="true"
+          aria-label="Generating questions"
+        >
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <p className="text-sm font-medium">AI is writing {questionCount} questions on {topic || "your topic"}...</p>
+          </div>
+          {Array.from({ length: Math.min(questionCount, 3) }).map((_, idx) => (
+            <Card key={idx} className="glass border-0 p-3 space-y-2">
+              <Skeleton className="h-4 w-3/4" />
+              <div className="ml-2 space-y-1.5">
+                <Skeleton className="h-3 w-1/2" />
+                <Skeleton className="h-3 w-2/3" />
+                <Skeleton className="h-3 w-1/2" />
+                <Skeleton className="h-3 w-3/5" />
+              </div>
+              <Skeleton className="h-3 w-1/4" />
+            </Card>
+          ))}
+        </motion.div>
+      )}
 
       {/* Result Display */}
       {result && result.success && (
