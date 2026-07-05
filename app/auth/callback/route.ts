@@ -8,8 +8,26 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
+    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+    
+    if (!exchangeError) {
+      // Session created successfully
+      const { data: userData } = await supabase.auth.getUser()
+      
+      if (userData.user) {
+        // Check if user profile exists
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", userData.user.id)
+          .single()
+        
+        // If new user (no profile), redirect to profile setup
+        if (!profile) {
+          return NextResponse.redirect(`${origin}/auth/setup-profile`)
+        }
+      }
+      
       return NextResponse.redirect(`${origin}${next}`)
     }
   }

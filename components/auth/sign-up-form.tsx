@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
-import { sendVerificationEmail, sendConfirmationEmail } from "@/lib/auth/send-email"
+import { sendConfirmationEmail } from "@/lib/auth/send-email"
 import { sendEmailOTP, verifyEmailOTP } from "@/lib/auth/otp-handler"
 import { OTPVerification } from "@/components/auth/otp-verification"
 import { Button } from "@/components/ui/button"
@@ -49,25 +49,37 @@ export function SignUpForm() {
 
   async function handleVerifyOTP(otp: string): Promise<boolean> {
     try {
-      const isValid = verifyEmailOTP(email, otp)
+      // Verify OTP with Supabase
+      const isValid = await verifyEmailOTP(email, otp)
       if (!isValid) {
+        toast.error("Invalid OTP. Please try again.")
         return false
       }
 
-      // Create user in Supabase
+      // Update user profile with full name
       const supabase = createClient()
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password: otp,
-        options: {
-          data: { full_name: fullName, role: "student" },
-        },
-      })
+      const { data: userData } = await supabase.auth.getUser()
 
-      if (signUpError) {
-        console.error("[v0] Sign up error:", signUpError)
-        toast.error(signUpError.message)
-        return false
+      if (userData.user) {
+        // Update user metadata
+        const { error: updateError } = await supabase.auth.updateUser({
+          data: { full_name: fullName, role: "student" },
+        })
+
+        if (updateError) {
+          console.error("[v0] Profile update error:", updateError)
+        }
+
+        // Create profile record
+        const { error: profileError } = await supabase.from("profiles").insert({
+          id: userData.user.id,
+          full_name: fullName,
+          role: "student",
+        })
+
+        if (profileError && !profileError.message.includes("duplicate")) {
+          console.warn("[v0] Profile record error:", profileError)
+        }
       }
 
       // Send confirmation email
@@ -82,7 +94,7 @@ export function SignUpForm() {
       return true
     } catch (error) {
       console.error("[v0] Verification error:", error)
-      toast.error("Failed to create account")
+      toast.error("Failed to verify OTP or create account")
       return false
     }
   }
