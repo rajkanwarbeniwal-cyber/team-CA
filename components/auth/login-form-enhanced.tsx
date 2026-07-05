@@ -63,24 +63,27 @@ export function LoginFormEnhanced() {
     const supabase = createClient()
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password: emailPassword,
       })
 
-      setEmailPasswordLoading(false)
-
       if (error) {
+        console.error("[v0] Login error:", error)
         toast.error(error.message || "Invalid email or password")
+        setEmailPasswordLoading(false)
         return
       }
 
-      toast.success("Signed in successfully!")
-      router.push(redirect)
-      router.refresh()
+      if (data.session) {
+        toast.success("Signed in successfully!")
+        router.push(redirect)
+        router.refresh()
+      }
     } catch (error) {
-      setEmailPasswordLoading(false)
+      console.error("[v0] Login exception:", error)
       toast.error("An error occurred. Please try again.")
+      setEmailPasswordLoading(false)
     }
   }
 
