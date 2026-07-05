@@ -1,5 +1,4 @@
-import { createClient } from "@/lib/supabase/client"
-import { sendVerificationEmail } from "@/lib/auth/send-email"
+import { sendOTPEmailAction } from "@/lib/auth/otp-server-actions"
 
 /**
  * Store OTP temporarily (in-memory for dev, should use Redis in production)
@@ -46,8 +45,8 @@ export function verifyOTP(identifier: string, otp: string): boolean {
 }
 
 /**
- * Send OTP via email using Resend
- * This actually sends the email through Resend API
+ * Send OTP via email using Resend (via server action)
+ * Client code calls this, which then calls the server action to send email
  */
 export async function sendEmailOTP(email: string): Promise<string> {
   try {
@@ -57,8 +56,8 @@ export async function sendEmailOTP(email: string): Promise<string> {
     // Store OTP
     storeOTP(`email:${email}`, otp)
     
-    // Send via Resend
-    const result = await sendVerificationEmail(email, otp)
+    // Send via server action (which calls Resend)
+    const result = await sendOTPEmailAction(email, otp)
     
     if (!result.success) {
       console.error("[v0] Failed to send OTP email:", result.error)

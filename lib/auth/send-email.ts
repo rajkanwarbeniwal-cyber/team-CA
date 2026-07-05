@@ -2,6 +2,10 @@
 
 import { Resend } from "resend"
 
+if (!process.env.RESEND_API_KEY) {
+  console.error("[v0] RESEND_API_KEY environment variable is not set!")
+}
+
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function sendVerificationEmail(email: string, otp: string) {
