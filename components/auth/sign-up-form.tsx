@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
-import { sendVerificationEmail, sendConfirmationEmail } from "@/lib/auth/send-email"
+import { sendConfirmationEmail } from "@/lib/auth/send-email"
 import { sendEmailOTP, verifyEmailOTP } from "@/lib/auth/otp-handler"
 import { OTPVerification } from "@/components/auth/otp-verification"
 import { Button } from "@/components/ui/button"
@@ -49,25 +49,47 @@ export function SignUpForm() {
 
   async function handleVerifyOTP(otp: string): Promise<boolean> {
     try {
+      // Verify OTP (synchronous)
       const isValid = verifyEmailOTP(email, otp)
       if (!isValid) {
+        toast.error("Invalid or expired OTP. Please try again.")
         return false
       }
 
-      // Create user in Supabase
+      // Sign up user in Supabase with temporary password
       const supabase = createClient()
-      const { error: signUpError } = await supabase.auth.signUp({
+      const tempPassword = Math.random().toString(36).slice(-12)
+      
+      const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
         email,
-        password: otp,
+        password: tempPassword,
         options: {
-          data: { full_name: fullName, role: "student" },
+          data: {
+            full_name: fullName,
+            role: "student",
+          },
         },
       })
 
-      if (signUpError) {
+      if (signUpError && !signUpError.message.includes("already")) {
         console.error("[v0] Sign up error:", signUpError)
-        toast.error(signUpError.message)
-        return false
+        throw new Error(signUpError.message || "Failed to create account")
+      }
+
+      // Get current user
+      const { data: userData } = await supabase.auth.getUser()
+
+      if (userData.user) {
+        // Create profile record
+        const { error: profileError } = await supabase.from("profiles").insert({
+          id: userData.user.id,
+          full_name: fullName,
+          role: "student",
+        }).select()
+
+        if (profileError && !profileError.message.includes("duplicate")) {
+          console.warn("[v0] Profile record error:", profileError)
+        }
       }
 
       // Send confirmation email
@@ -82,7 +104,7 @@ export function SignUpForm() {
       return true
     } catch (error) {
       console.error("[v0] Verification error:", error)
-      toast.error("Failed to create account")
+      toast.error(error instanceof Error ? error.message : "Failed to create account")
       return false
     }
   }

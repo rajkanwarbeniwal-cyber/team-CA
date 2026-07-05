@@ -1,20 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import Anthropic from "@anthropic-ai/sdk"
+import { getAITestService } from "@/lib/ai-test-service"
 import { createClient } from "@/lib/supabase/server"
 
 const SUBJECT_WEIGHTS = { weak: 0.6, average: 0.3, strong: 0.1 } as const
-
-interface RawQuestion {
-  question_text: string
-  option_a: string
-  option_b: string
-  option_c: string
-  option_d: string
-  correct_option: string
-  explanation: string
-  subject: string
-  difficulty: string
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -67,74 +55,30 @@ export async function POST(req: NextRequest) {
     }
 
     // Calculate question distribution
-    const total = strengthsToDistribution(strengths, questionCount)
+    const subjectDistribution = strengthsToDistribution(
+      strengths,
+      questionCount
+    ) as Array<{ subject: string; level: "weak" | "average" | "strong"; count: number }>
 
-    // Build subject breakdown string for prompt
-    const breakdownLines = total.map(
-      (s) => `- ${s.subject} (${s.level}): ${s.count} questions`
-    )
+    // Use the AI test service to generate questions
+    const aiTestService = getAITestService()
 
-    const prompt = `You are an expert ${profile.exam_goal} exam question creator for Indian competitive exams.
+    let questions: Awaited<ReturnType<typeof aiTestService.generateQuestions>>
 
-Generate exactly ${questionCount} multiple-choice questions for a ${profile.exam_goal} aspirant based on the following subject-wise distribution:
-
-${breakdownLines.join("\n")}
-
-Rules:
-- Questions marked for "weak" subjects should be at foundational/easy level to build understanding
-- Questions marked for "average" subjects should be at medium difficulty
-- Questions marked for "strong" subjects should be at advanced/hard level
-- Each question must have exactly 4 options (A, B, C, D)
-- The correct_option field must be exactly one of: "A", "B", "C", or "D"
-- The difficulty field must be exactly one of: "easy", "medium", or "hard"
-- Explanations should be concise and educational (2-3 sentences)
-- Questions must be relevant to the actual ${profile.exam_goal} syllabus
-- Do NOT repeat questions
-
-Return ONLY a valid JSON array with exactly ${questionCount} objects. Each object must have these exact fields:
-{
-  "question_text": string,
-  "option_a": string,
-  "option_b": string,
-  "option_c": string,
-  "option_d": string,
-  "correct_option": "A" | "B" | "C" | "D",
-  "explanation": string,
-  "subject": string,
-  "difficulty": "easy" | "medium" | "hard"
-}
-
-Return only the JSON array, no markdown, no explanation text.`
-
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    })
-
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 16000,
-      messages: [{ role: "user", content: prompt }],
-    })
-
-    const rawText = message.content[0].type === "text" ? message.content[0].text : ""
-
-    let questions: RawQuestion[]
     try {
-      // Strip any accidental markdown fences
-      const cleaned = rawText.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim()
-      questions = JSON.parse(cleaned)
-    } catch {
-      return NextResponse.json(
-        { error: "AI returned malformed JSON. Please try again." },
-        { status: 500 }
-      )
-    }
+      questions = await aiTestService.generateQuestions({
+        examGoal: profile.exam_goal,
+        questionCount,
+        subjectDistribution,
+      })
+    } catch (error) {
+      const errorMessage =
+        error && typeof error === "object" && "message" in error
+          ? (error as { message: string }).message
+          : "Failed to generate questions. Please try again."
 
-    if (!Array.isArray(questions) || questions.length === 0) {
-      return NextResponse.json(
-        { error: "AI returned no questions. Please try again." },
-        { status: 500 }
-      )
+      console.error("[generate-test] AI service error:", error)
+      return NextResponse.json({ error: errorMessage }, { status: 500 })
     }
 
     // Insert the test record
