@@ -106,20 +106,49 @@ export function LoginFormEnhanced() {
 
   async function handleEmailVerifyOTP(otp: string): Promise<boolean> {
     try {
-      // Verify OTP with Supabase
-      const isValid = await verifyEmailOTP(email, otp)
+      // Verify OTP (synchronous)
+      const isValid = verifyEmailOTP(email, otp)
       if (!isValid) {
-        toast.error("Invalid OTP. Please try again.")
+        toast.error("Invalid or expired OTP. Please try again.")
         return false
       }
 
-      toast.success("Email verified successfully!")
+      // Sign in user with temporary password (they can set it later)
+      const supabase = createClient()
+      const tempPassword = Math.random().toString(36).slice(-12)
+      
+      // Try to sign in - if user doesn't exist, sign them up
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: tempPassword,
+      })
+
+      if (signInError && signInError.message.includes("invalid")) {
+        // User doesn't exist, sign them up
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password: tempPassword,
+          options: {
+            data: { role: "student" },
+          },
+        })
+
+        if (signUpError) {
+          console.error("[v0] Sign up error:", signUpError)
+          throw new Error("Failed to create account")
+        }
+      } else if (signInError) {
+        console.error("[v0] Sign in error:", signInError)
+        throw new Error(signInError.message || "Failed to sign in")
+      }
+
+      toast.success("Signed in successfully!")
       router.push(redirect)
       router.refresh()
       return true
     } catch (error) {
       console.error("[v0] Email verification error:", error)
-      toast.error("Failed to verify email. Please try again.")
+      toast.error(error instanceof Error ? error.message : "Failed to verify email")
       return false
     }
   }

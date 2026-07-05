@@ -49,33 +49,43 @@ export function SignUpForm() {
 
   async function handleVerifyOTP(otp: string): Promise<boolean> {
     try {
-      // Verify OTP with Supabase
-      const isValid = await verifyEmailOTP(email, otp)
+      // Verify OTP (synchronous)
+      const isValid = verifyEmailOTP(email, otp)
       if (!isValid) {
-        toast.error("Invalid OTP. Please try again.")
+        toast.error("Invalid or expired OTP. Please try again.")
         return false
       }
 
-      // Update user profile with full name
+      // Sign up user in Supabase with temporary password
       const supabase = createClient()
+      const tempPassword = Math.random().toString(36).slice(-12)
+      
+      const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
+        email,
+        password: tempPassword,
+        options: {
+          data: {
+            full_name: fullName,
+            role: "student",
+          },
+        },
+      })
+
+      if (signUpError && !signUpError.message.includes("already")) {
+        console.error("[v0] Sign up error:", signUpError)
+        throw new Error(signUpError.message || "Failed to create account")
+      }
+
+      // Get current user
       const { data: userData } = await supabase.auth.getUser()
 
       if (userData.user) {
-        // Update user metadata
-        const { error: updateError } = await supabase.auth.updateUser({
-          data: { full_name: fullName, role: "student" },
-        })
-
-        if (updateError) {
-          console.error("[v0] Profile update error:", updateError)
-        }
-
         // Create profile record
         const { error: profileError } = await supabase.from("profiles").insert({
           id: userData.user.id,
           full_name: fullName,
           role: "student",
-        })
+        }).select()
 
         if (profileError && !profileError.message.includes("duplicate")) {
           console.warn("[v0] Profile record error:", profileError)
@@ -94,7 +104,7 @@ export function SignUpForm() {
       return true
     } catch (error) {
       console.error("[v0] Verification error:", error)
-      toast.error("Failed to verify OTP or create account")
+      toast.error(error instanceof Error ? error.message : "Failed to create account")
       return false
     }
   }

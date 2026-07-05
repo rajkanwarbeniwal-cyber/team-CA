@@ -1,44 +1,81 @@
 import { createClient } from "@/lib/supabase/client"
+import { sendVerificationEmail } from "@/lib/auth/send-email"
 
 /**
- * Send OTP via email using Supabase native email OTP
- * Supabase handles the email sending automatically through its email provider
+ * Store OTP temporarily (in-memory for dev, should use Redis in production)
  */
-export async function sendEmailOTP(email: string): Promise<void> {
-  const supabase = createClient()
+const otpStore = new Map<string, { code: string; expiresAt: number }>()
 
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/callback`,
-    },
-  })
-
-  if (error) {
-    console.error("[v0] Supabase OTP error:", error)
-    throw new Error(error.message || "Failed to send OTP email")
-  }
-
-  console.log("[v0] OTP email sent successfully to:", email)
+/**
+ * Generate random 6-digit OTP
+ */
+export function generateOTP(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString()
 }
 
 /**
- * Verify email OTP - Supabase handles this automatically via the callback URL
- * User clicks the link in the email, which completes the auth flow
+ * Store OTP temporarily (10 minutes expiry)
  */
-export async function verifyEmailOTP(email: string, otp: string): Promise<boolean> {
-  const supabase = createClient()
+export function storeOTP(identifier: string, otp: string): void {
+  const expiresAt = Date.now() + 10 * 60 * 1000 // 10 minutes
+  otpStore.set(identifier, { code: otp, expiresAt })
+  console.log("[v0] OTP stored for:", identifier, "expires in 10 minutes")
+}
 
-  const { error } = await supabase.auth.verifyOtp({
-    email,
-    token: otp,
-    type: "email",
-  })
-
-  if (error) {
-    console.error("[v0] OTP verification error:", error)
+/**
+ * Verify OTP
+ */
+export function verifyOTP(identifier: string, otp: string): boolean {
+  const stored = otpStore.get(identifier)
+  if (!stored) {
+    console.warn("[v0] OTP not found for:", identifier)
     return false
   }
-
+  if (Date.now() > stored.expiresAt) {
+    console.warn("[v0] OTP expired for:", identifier)
+    otpStore.delete(identifier)
+    return false
+  }
+  if (stored.code !== otp) {
+    console.warn("[v0] OTP mismatch for:", identifier)
+    return false
+  }
+  otpStore.delete(identifier)
+  console.log("[v0] OTP verified successfully for:", identifier)
   return true
+}
+
+/**
+ * Send OTP via email using Resend
+ * This actually sends the email through Resend API
+ */
+export async function sendEmailOTP(email: string): Promise<string> {
+  try {
+    // Generate OTP
+    const otp = generateOTP()
+    
+    // Store OTP
+    storeOTP(`email:${email}`, otp)
+    
+    // Send via Resend
+    const result = await sendVerificationEmail(email, otp)
+    
+    if (!result.success) {
+      console.error("[v0] Failed to send OTP email:", result.error)
+      throw new Error(result.error || "Failed to send OTP email")
+    }
+    
+    console.log("[v0] OTP email sent successfully to:", email)
+    return otp
+  } catch (error) {
+    console.error("[v0] Error in sendEmailOTP:", error)
+    throw error
+  }
+}
+
+/**
+ * Verify email OTP
+ */
+export function verifyEmailOTP(email: string, otp: string): boolean {
+  return verifyOTP(`email:${email}`, otp)
 }
